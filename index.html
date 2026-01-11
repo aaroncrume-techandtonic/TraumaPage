@@ -1,863 +1,528 @@
-<!-- Chosen Palette: Medicine Wheel Harmony (Slate Neutral Background with Yellow, Red, Black, White Accents) -->
-
-<!-- Application Structure Plan: A 4-Quadrant Dashboard inspired by the Medicine Wheel structure used in the books. 1. East (Identification/Book 1): Focus on categorizing and recognizing the 17 signs using interactive cards and a 'Trauma Spectrum' radar chart to distinguish PTSD/CPTSD. 2. South (Neurobiology/Book 2): Visualizing the 'Engine Room' with a Polyvagal State interactive graph and a 'Brain Hijack' diagram comparing the Pilot (PFC) vs Smoke Detector (Amygdala). 3. West (Healing/Book 3): Interactive tools for integration, including a 'Breathing Pacer' for TIPP and a 'Grounding' checklist. 4. Reader Mode: A persistent overlay allowing deep reading of the full text with TTS, bridging the 'Info App' with the 'E-book' requirement. User Flow: Users land on a central hub, select a quadrant to explore specific interactive data/concepts, and can toggle 'Deep Read' at any time. -->
-
-<!-- Visualization & Content Choices: 1. Trauma Spectrum Radar Chart (Chart.js): Visualizes the qualitative differences between PTSD (event-focused) and CPTSD (relational/self-concept focused) - Goal: Inform/Compare. 2. The 17 Signs Interactive Grid (HTML/JS): Categorized cards (Social/Cognitive/Emotional) that flip/expand to show 'The Scenario' and 'The Logic' - Goal: Inform/Deepen Understanding. 3. Polyvagal Energy Levels (Chart.js): Bar chart comparing the 'Energy' vs 'Safety' of the three states (Ventral, Sympathetic, Dorsal) - Goal: Inform/Explain relationships. 4. Breathing Pacer (CSS/JS Animation): A visual tool for the 'Paced Breathing' technique in Book 3 - Goal: Change/Regulate. 5. TTS Reader (Gemini API): Accessible consumption of the long-form text. -->
-
-<!-- CONFIRMATION: NO SVG graphics used (FontAwesome icons used instead). NO Mermaid JS used. -->
-
 <!DOCTYPE html>
-
-<html lang="en"> <head> <meta charset="UTF-8"> <meta name="viewport" content="width=device-width, initial-scale=1.0"> <title>The Overlooked Signs: Interactive Trauma Companion</title> <script src="https://cdn.tailwindcss.com"></script> <script src="https://cdn.jsdelivr.net/npm/chart.js"></script> <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet"> <style> @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
-
-    body { font-family: 'Inter', sans-serif; background-color: #F8FAFC; color: #1E293B; }
-    
-    /* Custom Scrollbar */
-    ::-webkit-scrollbar { width: 8px; }
-    ::-webkit-scrollbar-track { background: #f1f1f1; }
-    ::-webkit-scrollbar-thumb { background: #94a3b8; border-radius: 4px; }
-    ::-webkit-scrollbar-thumb:hover { background: #64748b; }
-
-    /* Chart Container Utilities */
-    .chart-container {
-        position: relative;
-        width: 100%;
-        max-width: 600px;
-        height: 350px;
-        max-height: 400px;
-        margin: 0 auto;
-    }
-    
-    /* Interactive Card Hover Effects */
-    .sign-card { transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); }
-    .sign-card:hover { transform: translateY(-4px); box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1); }
-    
-    /* Medicine Wheel Accents */
-    .border-east { border-color: #FBBF24; } /* Yellow */
-    .border-south { border-color: #EF4444; } /* Red */
-    .border-west { border-color: #1E293B; } /* Black/Dark Slate */
-    .border-north { border-color: #94A3B8; } /* White/Grey */
-    
-    .bg-east { background-color: #FEF3C7; color: #92400E; }
-    .bg-south { background-color: #FEE2E2; color: #991B1B; }
-    .bg-west { background-color: #E2E8F0; color: #1E293B; }
-    
-    /* Animation */
-    @keyframes breathe {
-        0%, 100% { transform: scale(1); opacity: 0.8; }
-        50% { transform: scale(1.5); opacity: 0.4; }
-    }
-    .breathing-circle {
-        animation: breathe 8s infinite ease-in-out;
-    }
-
-    /* Reader Overlay Transition */
-    .modal-enter { opacity: 0; transform: scale(0.95); }
-    .modal-enter-active { opacity: 1; transform: scale(1); transition: opacity 300ms, transform 300ms; }
-    .modal-exit { opacity: 1; transform: scale(1); }
-    .modal-exit-active { opacity: 0; transform: scale(0.95); transition: opacity 300ms, transform 300ms; }
-</style>
-</head> <body class="flex h-screen overflow-hidden">
-
-<!-- Sidebar Navigation -->
-<nav class="w-20 md:w-64 bg-slate-900 text-white flex flex-col flex-shrink-0 transition-all duration-300 z-20">
-    <div class="p-4 flex items-center justify-center md:justify-start gap-3 border-b border-slate-700 h-20">
-        <div class="w-10 h-10 rounded-full border-2 border-white flex items-center justify-center relative overflow-hidden bg-slate-800">
-            <div class="absolute top-0 right-0 w-1/2 h-1/2 bg-yellow-400 opacity-80"></div>
-            <div class="absolute bottom-0 right-0 w-1/2 h-1/2 bg-red-500 opacity-80"></div>
-            <div class="absolute bottom-0 left-0 w-1/2 h-1/2 bg-slate-900 opacity-80"></div>
-            <div class="absolute top-0 left-0 w-1/2 h-1/2 bg-slate-100 opacity-80"></div>
-        </div>
-        <span class="font-bold text-lg hidden md:block tracking-wide">Trauma<br>Compass</span>
-    </div>
-
-    <div class="flex-1 overflow-y-auto py-4 space-y-2">
-        <button onclick="switchView('dashboard')" class="nav-btn w-full p-4 flex items-center gap-4 hover:bg-slate-800 text-slate-300 hover:text-white transition-colors border-l-4 border-transparent active-nav" id="btn-dashboard">
-            <i class="fa-solid fa-compass text-xl w-8 text-center"></i>
-            <span class="hidden md:inline font-medium">Overview</span>
-        </button>
-        <button onclick="switchView('east')" class="nav-btn w-full p-4 flex items-center gap-4 hover:bg-slate-800 text-slate-300 hover:text-white transition-colors border-l-4 border-transparent" id="btn-east">
-            <i class="fa-solid fa-magnifying-glass text-xl w-8 text-center text-yellow-400"></i>
-            <span class="hidden md:inline font-medium">Identify (East)</span>
-        </button>
-        <button onclick="switchView('south')" class="nav-btn w-full p-4 flex items-center gap-4 hover:bg-slate-800 text-slate-300 hover:text-white transition-colors border-l-4 border-transparent" id="btn-south">
-            <i class="fa-solid fa-brain text-xl w-8 text-center text-red-500"></i>
-            <span class="hidden md:inline font-medium">Biology (South)</span>
-        </button>
-        <button onclick="switchView('west')" class="nav-btn w-full p-4 flex items-center gap-4 hover:bg-slate-800 text-slate-300 hover:text-white transition-colors border-l-4 border-transparent" id="btn-west">
-            <i class="fa-solid fa-hand-holding-heart text-xl w-8 text-center text-slate-400"></i>
-            <span class="hidden md:inline font-medium">Heal (West)</span>
-        </button>
-        <button onclick="switchView('north')" class="nav-btn w-full p-4 flex items-center gap-4 hover:bg-slate-800 text-slate-300 hover:text-white transition-colors border-l-4 border-transparent" id="btn-north">
-            <i class="fa-solid fa-book-medical text-xl w-8 text-center text-white"></i>
-            <span class="hidden md:inline font-medium">Resources (North)</span>
-        </button>
-    </div>
-
-    <div class="p-4 border-t border-slate-700">
-        <button onclick="toggleReader()" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white p-3 rounded-lg flex items-center justify-center gap-2 transition-all shadow-lg">
-            <i class="fa-solid fa-book-open"></i>
-            <span class="hidden md:inline font-semibold">Reader Mode</span>
-        </button>
-    </div>
-</nav>
-
-<!-- Main Content Area -->
-<main class="flex-1 overflow-y-auto bg-slate-50 relative">
-    <!-- Top Bar -->
-    <header class="bg-white border-b border-slate-200 p-6 sticky top-0 z-10 flex justify-between items-center shadow-sm">
-        <div>
-            <h1 id="page-title" class="text-2xl font-bold text-slate-800">Trauma Compass Dashboard</h1>
-            <p id="page-subtitle" class="text-slate-500 text-sm mt-1">Navigate the landscape of trauma, neurobiology, and healing.</p>
-        </div>
-        <div class="hidden md:flex items-center gap-3 text-sm text-slate-500">
-            <span class="flex items-center gap-1"><div class="w-3 h-3 rounded-full bg-yellow-400"></div> Signs</span>
-            <span class="flex items-center gap-1"><div class="w-3 h-3 rounded-full bg-red-500"></div> Body</span>
-            <span class="flex items-center gap-1"><div class="w-3 h-3 rounded-full bg-slate-800"></div> Mind</span>
-        </div>
-    </header>
-
-    <!-- Content Views -->
-    <div id="content-area" class="p-6 md:p-10 max-w-7xl mx-auto">
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>The Overlooked Signs: Interactive Trauma Companion</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
         
-        <!-- Dashboard View -->
-        <div id="view-dashboard" class="space-y-8 animate-fade-in">
-            <div class="bg-white p-8 rounded-2xl shadow-sm border border-slate-200">
-                <h2 class="text-xl font-bold mb-4 text-slate-800">Welcome to the Architecture of Hope</h2>
-                <p class="text-slate-600 leading-relaxed mb-6">
-                    This interactive companion helps you translate the complex experiences of trauma into understandable patterns. 
-                    Trauma is not a character flaw; it is a biological survival strategy. Use the Medicine Wheel navigation to explore the 
-                    17 overlooked signs, the neurochemistry behind them, and the practical tools for recovery.
-                </p>
-                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-                    <div onclick="switchView('east')" class="cursor-pointer p-6 rounded-xl bg-yellow-50 border border-yellow-200 hover:shadow-md transition-all">
-                        <div class="text-yellow-600 font-bold mb-2">East</div>
-                        <div class="text-2xl font-bold text-slate-800 mb-1">Identify</div>
-                        <p class="text-sm text-slate-600">The 17 Signs & Spectrum</p>
-                    </div>
-                    <div onclick="switchView('south')" class="cursor-pointer p-6 rounded-xl bg-red-50 border border-red-200 hover:shadow-md transition-all">
-                        <div class="text-red-600 font-bold mb-2">South</div>
-                        <div class="text-2xl font-bold text-slate-800 mb-1">Understand</div>
-                        <p class="text-sm text-slate-600">Brain & Chemistry</p>
-                    </div>
-                    <div onclick="switchView('west')" class="cursor-pointer p-6 rounded-xl bg-slate-100 border border-slate-300 hover:shadow-md transition-all">
-                        <div class="text-slate-600 font-bold mb-2">West</div>
-                        <div class="text-2xl font-bold text-slate-800 mb-1">Heal</div>
-                        <p class="text-sm text-slate-600">Tools & Scripts</p>
-                    </div>
-                    <div onclick="switchView('north')" class="cursor-pointer p-6 rounded-xl bg-white border border-slate-200 hover:shadow-md transition-all">
-                        <div class="text-slate-400 font-bold mb-2">North</div>
-                        <div class="text-2xl font-bold text-slate-800 mb-1">Support</div>
-                        <p class="text-sm text-slate-600">Crisis Resources</p>
-                    </div>
-                </div>
-            </div>
-
-            <div class="grid md:grid-cols-2 gap-8">
-                <!-- Chart 1: Trauma Spectrum -->
-                <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-200">
-                    <h3 class="font-bold text-lg text-slate-800 mb-2">The Trauma Spectrum</h3>
-                    <p class="text-sm text-slate-500 mb-4">Comparing the symptom focus of PTSD vs. CPTSD.</p>
-                    <div class="chart-container">
-                        <canvas id="spectrumChart"></canvas>
-                    </div>
-                </div>
-                
-                <!-- Quick Stats -->
-                <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-200 flex flex-col justify-center">
-                    <h3 class="font-bold text-lg text-slate-800 mb-6">Key Concepts Map</h3>
-                    <div class="space-y-4">
-                        <div class="flex items-center justify-between p-3 bg-slate-50 rounded-lg">
-                            <span class="font-medium text-slate-700">Identified Signs</span>
-                            <span class="bg-indigo-100 text-indigo-700 px-3 py-1 rounded-full text-sm font-bold">17</span>
-                        </div>
-                        <div class="flex items-center justify-between p-3 bg-slate-50 rounded-lg">
-                            <span class="font-medium text-slate-700">Nervous System States</span>
-                            <span class="bg-indigo-100 text-indigo-700 px-3 py-1 rounded-full text-sm font-bold">4</span>
-                        </div>
-                        <div class="flex items-center justify-between p-3 bg-slate-50 rounded-lg">
-                            <span class="font-medium text-slate-700">Stress Chemicals</span>
-                            <span class="bg-indigo-100 text-indigo-700 px-3 py-1 rounded-full text-sm font-bold">3</span>
-                        </div>
-                        <div class="flex items-center justify-between p-3 bg-slate-50 rounded-lg">
-                            <span class="font-medium text-slate-700">Healing Modalities</span>
-                            <span class="bg-indigo-100 text-indigo-700 px-3 py-1 rounded-full text-sm font-bold">5+</span>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <!-- East View (Identification) -->
-        <div id="view-east" class="hidden space-y-8 animate-fade-in">
-            <div class="bg-yellow-50 border-l-4 border-yellow-400 p-6 rounded-r-xl">
-                <h3 class="text-yellow-800 font-bold text-lg mb-2">East: The Physical & The Beginning</h3>
-                <p class="text-yellow-700">
-                    Identification is the first step. Here we explore the 17 signs categorized by their function. 
-                    Click any card to understand the hidden logic behind the behavior.
-                </p>
-                <button onclick="openBookReader(1)" class="mt-4 px-4 py-2 bg-yellow-500 text-white rounded-lg hover:bg-yellow-600 transition-colors text-sm font-bold shadow-sm">
-                    <i class="fa-solid fa-book-open mr-2"></i>Read Book 1 Full Text
-                </button>
-            </div>
-
-            <!-- Filters -->
-            <div class="flex gap-2 overflow-x-auto pb-2">
-                <button onclick="filterSigns('all')" class="px-4 py-2 rounded-full bg-slate-800 text-white text-sm font-medium hover:bg-slate-700 transition-colors sign-filter active">All Signs</button>
-                <button onclick="filterSigns('social')" class="px-4 py-2 rounded-full bg-white border border-slate-300 text-slate-600 text-sm font-medium hover:bg-slate-50 transition-colors sign-filter">Social (Fawn/Flight)</button>
-                <button onclick="filterSigns('cognitive')" class="px-4 py-2 rounded-full bg-white border border-slate-300 text-slate-600 text-sm font-medium hover:bg-slate-50 transition-colors sign-filter">Cognitive Warp</button>
-                <button onclick="filterSigns('emotional')" class="px-4 py-2 rounded-full bg-white border border-slate-300 text-slate-600 text-sm font-medium hover:bg-slate-50 transition-colors sign-filter">Emotional Shadow</button>
-            </div>
-
-            <!-- 17 Signs Grid -->
-            <div id="signs-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                <!-- Populated by JS -->
-            </div>
-        </div>
-
-        <!-- South View (Neurobiology) -->
-        <div id="view-south" class="hidden space-y-8 animate-fade-in">
-            <div class="bg-red-50 border-l-4 border-red-500 p-6 rounded-r-xl">
-                <h3 class="text-red-800 font-bold text-lg mb-2">South: The Emotional & Vitality</h3>
-                <p class="text-red-700">
-                    Understanding the "Engine Room." Trauma is a physiological issue, not just a psychological one.
-                    See how your body shifts energy states to survive.
-                </p>
-                <button onclick="openBookReader(2)" class="mt-4 px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 transition-colors text-sm font-bold shadow-sm">
-                    <i class="fa-solid fa-book-open mr-2"></i>Read Book 2 Full Text
-                </button>
-            </div>
-
-            <div class="grid lg:grid-cols-2 gap-8">
-                <!-- Polyvagal Chart -->
-                <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-200">
-                    <h3 class="font-bold text-lg text-slate-800 mb-2">The Polyvagal Ladder</h3>
-                    <p class="text-sm text-slate-500 mb-4">Energy mobilization vs. Safety perception.</p>
-                    <div class="chart-container">
-                        <canvas id="polyvagalChart"></canvas>
-                    </div>
-                </div>
-
-                <!-- Brain Diagram (Concept) -->
-                <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-200 flex flex-col">
-                    <h3 class="font-bold text-lg text-slate-800 mb-4">The Neural Hijack</h3>
-                    <div class="flex-1 flex flex-col gap-4">
-                        <!-- PFC -->
-                        <div class="border border-slate-200 rounded-lg p-4 relative overflow-hidden group hover:border-indigo-400 transition-colors">
-                            <div class="flex justify-between items-start z-10 relative">
-                                <div>
-                                    <h4 class="font-bold text-slate-800">Prefrontal Cortex (The Pilot)</h4>
-                                    <p class="text-sm text-slate-600 mt-1">Logic, Planning, Regulation</p>
-                                </div>
-                                <i class="fa-solid fa-plane text-slate-300 text-2xl group-hover:text-indigo-400 transition-colors"></i>
-                            </div>
-                            <div class="mt-3 text-xs bg-red-100 text-red-700 p-2 rounded inline-block font-semibold">
-                                Status in Trauma: OFFLINE
-                            </div>
-                        </div>
-                        <!-- Amygdala -->
-                        <div class="border border-slate-200 rounded-lg p-4 relative overflow-hidden group hover:border-red-400 transition-colors bg-red-50">
-                            <div class="flex justify-between items-start z-10 relative">
-                                <div>
-                                    <h4 class="font-bold text-red-900">Amygdala (The Smoke Detector)</h4>
-                                    <p class="text-sm text-red-700 mt-1">Fear, Threat Detection, Reaction</p>
-                                </div>
-                                <i class="fa-solid fa-bell text-red-300 text-2xl group-hover:text-red-500 transition-colors animate-pulse"></i>
-                            </div>
-                            <div class="mt-3 text-xs bg-red-200 text-red-800 p-2 rounded inline-block font-semibold">
-                                Status in Trauma: HYPERACTIVE
-                            </div>
-                        </div>
-                        <!-- Hippocampus -->
-                        <div class="border border-slate-200 rounded-lg p-4 relative overflow-hidden group hover:border-indigo-400 transition-colors">
-                            <div class="flex justify-between items-start z-10 relative">
-                                <div>
-                                    <h4 class="font-bold text-slate-800">Hippocampus (The Librarian)</h4>
-                                    <p class="text-sm text-slate-600 mt-1">Memory Filing, Context, Time</p>
-                                </div>
-                                <i class="fa-solid fa-clock-rotate-left text-slate-300 text-2xl group-hover:text-indigo-400 transition-colors"></i>
-                            </div>
-                            <div class="mt-3 text-xs bg-orange-100 text-orange-800 p-2 rounded inline-block font-semibold">
-                                Status in Trauma: MALFUNCTION
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <!-- West View (Healing) -->
-        <div id="view-west" class="hidden space-y-8 animate-fade-in">
-            <div class="bg-slate-800 border-l-4 border-slate-600 p-6 rounded-r-xl text-white">
-                <h3 class="font-bold text-lg mb-2">West: The Mental & Introspection</h3>
-                <p class="text-slate-300">
-                    Healing is the daily practice of returning to safety. Use these tools to regulate your nervous system 
-                    when the 'Smoke Detector' falsely goes off.
-                </p>
-                <button onclick="openBookReader(3)" class="mt-4 px-4 py-2 bg-slate-600 text-white rounded-lg hover:bg-slate-500 transition-colors text-sm font-bold shadow-lg border border-slate-500">
-                    <i class="fa-solid fa-book-open mr-2"></i>Read Book 3 Full Text
-                </button>
-            </div>
-
-            <div class="grid lg:grid-cols-2 gap-8">
-                <!-- TIPP Tool -->
-                <div class="bg-white p-8 rounded-2xl shadow-sm border border-slate-200 flex flex-col items-center text-center">
-                    <h3 class="font-bold text-xl text-slate-800 mb-2">Paced Breathing (TIPP)</h3>
-                    <p class="text-slate-500 mb-8 max-w-sm">Use this visual anchor to slow your exhale and activate the Ventral Vagal state.</p>
-                    
-                    <div class="relative w-48 h-48 flex items-center justify-center mb-8">
-                        <div class="absolute inset-0 bg-indigo-100 rounded-full breathing-circle"></div>
-                        <div class="relative z-10 text-indigo-800 font-bold text-lg">Breathe</div>
-                    </div>
-                    
-                    <div class="flex gap-4 text-sm text-slate-600 bg-slate-50 p-4 rounded-xl w-full justify-between">
-                        <div class="text-center">
-                            <div class="font-bold text-indigo-600">Inhale</div>
-                            <div>4 sec</div>
-                        </div>
-                        <div class="text-center">
-                            <div class="font-bold text-slate-400">Hold</div>
-                            <div>2 sec</div>
-                        </div>
-                        <div class="text-center">
-                            <div class="font-bold text-indigo-600">Exhale</div>
-                            <div>6 sec</div>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Grounding Checklist -->
-                <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-200">
-                    <h3 class="font-bold text-xl text-slate-800 mb-4">5-4-3-2-1 Grounding</h3>
-                    <p class="text-slate-500 mb-6">Anchor yourself in the present moment.</p>
-                    
-                    <div class="space-y-4">
-                        <label class="flex items-center gap-4 p-3 border border-slate-100 rounded-xl hover:bg-slate-50 cursor-pointer transition-colors group">
-                            <input type="checkbox" class="w-5 h-5 text-indigo-600 rounded focus:ring-indigo-500">
-                            <div class="flex-1">
-                                <span class="font-bold text-slate-800 block">5 Things you see</span>
-                                <span class="text-xs text-slate-500">Name color, shape, or shadow.</span>
-                            </div>
-                            <i class="fa-solid fa-eye text-slate-300 group-hover:text-indigo-400"></i>
-                        </label>
-                        <label class="flex items-center gap-4 p-3 border border-slate-100 rounded-xl hover:bg-slate-50 cursor-pointer transition-colors group">
-                            <input type="checkbox" class="w-5 h-5 text-indigo-600 rounded focus:ring-indigo-500">
-                            <div class="flex-1">
-                                <span class="font-bold text-slate-800 block">4 Things you feel</span>
-                                <span class="text-xs text-slate-500">Texture of clothes, feet on floor.</span>
-                            </div>
-                            <i class="fa-solid fa-hand text-slate-300 group-hover:text-indigo-400"></i>
-                        </label>
-                        <label class="flex items-center gap-4 p-3 border border-slate-100 rounded-xl hover:bg-slate-50 cursor-pointer transition-colors group">
-                            <input type="checkbox" class="w-5 h-5 text-indigo-600 rounded focus:ring-indigo-500">
-                            <div class="flex-1">
-                                <span class="font-bold text-slate-800 block">3 Things you hear</span>
-                                <span class="text-xs text-slate-500">Traffic, birds, hum of fridge.</span>
-                            </div>
-                            <i class="fa-solid fa-ear-listen text-slate-300 group-hover:text-indigo-400"></i>
-                        </label>
-                        <label class="flex items-center gap-4 p-3 border border-slate-100 rounded-xl hover:bg-slate-50 cursor-pointer transition-colors group">
-                            <input type="checkbox" class="w-5 h-5 text-indigo-600 rounded focus:ring-indigo-500">
-                            <div class="flex-1">
-                                <span class="font-bold text-slate-800 block">2 Things you smell</span>
-                                <span class="text-xs text-slate-500">Coffee, soap, fresh air.</span>
-                            </div>
-                            <i class="fa-solid fa-wind text-slate-300 group-hover:text-indigo-400"></i>
-                        </label>
-                        <label class="flex items-center gap-4 p-3 border border-slate-100 rounded-xl hover:bg-slate-50 cursor-pointer transition-colors group">
-                            <input type="checkbox" class="w-5 h-5 text-indigo-600 rounded focus:ring-indigo-500">
-                            <div class="flex-1">
-                                <span class="font-bold text-slate-800 block">1 Thing you taste</span>
-                                <span class="text-xs text-slate-500">Gum, tea, or just saliva.</span>
-                            </div>
-                            <i class="fa-solid fa-mug-hot text-slate-300 group-hover:text-indigo-400"></i>
-                        </label>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <!-- North View (Resources) -->
-        <div id="view-north" class="hidden space-y-8 animate-fade-in">
-            <div class="bg-white border-l-4 border-slate-400 p-6 rounded-r-xl">
-                <h3 class="text-slate-800 font-bold text-lg mb-2">North: The Spiritual & Wisdom</h3>
-                <p class="text-slate-600">
-                    You do not have to walk this path alone. Access immediate support and long-term resources here.
-                </p>
-            </div>
-
-            <div class="grid md:grid-cols-2 gap-6" id="resources-grid">
-                <!-- Populated by JS -->
-            </div>
-        </div>
-
-    </div>
-</main>
-
-<!-- Reader Modal Overlay -->
-<div id="reader-modal" class="fixed inset-0 z-50 hidden bg-slate-900/50 backdrop-blur-sm flex items-center justify-center p-4">
-    <div class="bg-white w-full max-w-4xl h-[90vh] rounded-2xl shadow-2xl flex flex-col overflow-hidden relative transform transition-all scale-95 opacity-0" id="reader-content-box">
-        <!-- Modal Header -->
-        <div class="p-4 border-b border-slate-100 flex justify-between items-center bg-white sticky top-0 z-10">
-            <h3 id="reader-title" class="font-bold text-lg text-slate-800">Book Reader</h3>
-            <div class="flex items-center gap-3">
-                <span id="tts-status" class="text-xs font-bold text-indigo-600 hidden animate-pulse">READING...</span>
-                <button onclick="toggleTTS()" id="reader-tts-btn" class="w-10 h-10 rounded-full bg-indigo-50 text-indigo-600 hover:bg-indigo-600 hover:text-white transition-colors flex items-center justify-center">
-                    <i class="fa-solid fa-volume-high"></i>
-                </button>
-                <button onclick="toggleReader()" class="w-10 h-10 rounded-full bg-slate-100 text-slate-600 hover:bg-red-500 hover:text-white transition-colors flex items-center justify-center">
-                    <i class="fa-solid fa-xmark"></i>
-                </button>
-            </div>
-        </div>
+        /* Chosen Palette: Medicine Wheel Harmony */
+        body { font-family: 'Inter', sans-serif; background-color: #F8FAFC; color: #1E293B; overflow: hidden; }
         
-        <!-- Modal Body -->
-        <div id="reader-text-area" class="flex-1 overflow-y-auto p-8 prose prose-slate max-w-none">
-            <!-- Content Injected Here -->
-        </div>
-        
-        <!-- Loading Overlay for TTS -->
-        <div id="tts-loading" class="absolute inset-0 bg-white/90 z-20 flex flex-col items-center justify-center hidden">
-            <i class="fa-solid fa-circle-notch animate-spin text-4xl text-indigo-600 mb-4"></i>
-            <p class="font-bold text-slate-600">Generating Audio...</p>
-        </div>
-    </div>
-</div>
-
-<script>
-    const apiKey = ""; // Injected by environment
-
-    // --- Data Source ---
-    const signsData = [
-        { id: 1, group: 'social', title: 'Over-explaining', icon: 'fa-comments', scenario: 'Drafting an email for 20 minutes to avoid misinterpretation.', logic: 'Preemptively soothing others to stay safe from unpredictable reactions.' },
-        { id: 2, group: 'social', title: 'Preemptive Self-Attack', icon: 'fa-shield-halved', scenario: 'Calling yourself "stupid" before anyone else can.', logic: 'Controlling the pain of criticism by inflicting it yourself first.' },
-        { id: 3, group: 'social', title: 'Ignoring Needs', icon: 'fa-battery-empty', scenario: 'Forgetting to eat because you are focused on tasks.', logic: 'Belief that your needs are a burden/threat to safety.' },
-        { id: 4, group: 'social', title: 'Validation Chase', icon: 'fa-trophy', scenario: 'Feeling a high from praise that evaporates instantly.', logic: 'Internal "shame filter" rejects positive data.' },
-        { id: 5, group: 'social', title: 'Apologizing for Existing', icon: 'fa-user-slash', scenario: 'Saying "sorry" for taking up physical space.', logic: 'Core existential shame; feeling like a mistake.' },
-        { id: 6, group: 'cognitive', title: 'Splitting', icon: 'fa-arrows-split-up-and-left', scenario: 'Viewing a friend as "evil" for one mistake.', logic: 'Inability to handle nuance due to inconsistent safety.' },
-        { id: 7, group: 'cognitive', title: 'Hypervigilance', icon: 'fa-eye', scenario: 'Scanning exits and tracking moods in a restaurant.', logic: 'Nervous system permanently set to "Code Red".' },
-        { id: 8, group: 'cognitive', title: 'Attachment Extremes', icon: 'fa-magnet', scenario: 'Attaching instantly or isolating completely.', logic: 'Desperate management of relational risk.' },
-        { id: 9, group: 'cognitive', title: 'The "Busy" Shield', icon: 'fa-person-running', scenario: 'Working constantly to avoid silence.', logic: 'Outrunning intrusive memories and feelings.' },
-        { id: 10, group: 'cognitive', title: 'Dissociation', icon: 'fa-cloud', scenario: 'Checking out mid-conversation; feeling foggy.', logic: 'Mental escape when physical escape is impossible.' },
-        { id: 11, group: 'emotional', title: 'Survival Cynicism', icon: 'fa-filter', scenario: 'Thinking "what do they want?" when someone is kind.', logic: 'Kindness historically masked betrayal.' },
-        { id: 12, group: 'emotional', title: 'Crowded Loneliness', icon: 'fa-users-slash', scenario: 'Feeling an invisible barrier in a group.', logic: 'Unresolved shame prevents authentic connection.' },
-        { id: 13, group: 'emotional', title: 'Trauma Rehearsal', icon: 'fa-film', scenario: 'Imagining worst-case scenarios daily.', logic: 'Practicing pain to avoid being blindsided.' },
-        { id: 14, group: 'emotional', title: 'Emotional Freeze', icon: 'fa-icicles', scenario: 'Mind goes blank when asked "how do you feel?".', logic: 'Disconnection from body signals (Interoception).' },
-        { id: 15, group: 'emotional', title: 'Disproportionate Reaction', icon: 'fa-explosion', scenario: 'Rage over a dropped glass.', logic: 'Reacting to stored stress, not the immediate trigger.' },
-        { id: 16, group: 'emotional', title: 'Comparison Loop', icon: 'fa-scale-unbalanced', scenario: 'Seeing others as whole and yourself as broken.', logic: 'Confirmation of negative self-concept.' },
-        { id: 17, group: 'emotional', title: 'Repetition Compulsion', icon: 'fa-rotate-right', scenario: 'Choosing familiar pain/partners.', logic: 'Subconscious attempt to master the original trauma.' }
-    ];
-
-    const resourcesData = [
-        { name: "National Suicide & Crisis Lifeline", desc: "24/7 Confidential Support", contact: "988" },
-        { name: "Crisis Text Line", desc: "Text-based crisis support", contact: "Text HOME to 741741" },
-        { name: "National Domestic Violence Hotline", desc: "Safety planning & support", contact: "1-800-799-7233" },
-        { name: "SAMHSA National Helpline", desc: "Treatment referral routing", contact: "1-800-662-4357" },
-        { name: "National Center for PTSD", desc: "Research & educational resources", contact: "ptsd.va.gov" }
-    ];
-
-    const bookTexts = {
-        1: `<h1>The Hidden Language of Trauma</h1><p>Trauma is not just a memory of a bad event; it is an invisible architecture that changes how you perceive safety, connection, and your own worth.</p><h2>The 17 Overlooked Signs</h2><p>Identifying these signs is the first act of rebellion against your trauma. You are not "crazy," and you are not "difficult." You are a survivor.</p><h3>Group A: Social Survival</h3><p><strong>1. Over-explaining:</strong> You draft emails for 20 minutes to avoid "danger."</p><p><strong>2. Self-Criticism:</strong> Tearing yourself down first to control the pain.</p><p><strong>3. Ignoring Needs:</strong> Believing your needs are a burden.</p><p><strong>4. Validation Chase:</strong> A "shame filter" rejects praise.</p><p><strong>5. Apologizing for Existing:</strong> Deep existential shame.</p><h3>Group B: Cognitive Warp</h3><p><strong>6. Splitting:</strong> Seeing the world as all-good or all-bad.</p><p><strong>7. Hypervigilance:</strong> Scanning every room for danger.</p><p><strong>8. Attachment Extremes:</strong> Fast attachment or total isolation.</p><p><strong>9. The Busy Shield:</strong> Moving to avoid feeling.</p><p><strong>10. Dissociation:</strong> Mental departure for safety.</p><h3>Group C: Emotional Shadow</h3><p><strong>11. Survival Cynicism:</strong> Distrusting kindness.</p><p><strong>12. Crowded Loneliness:</strong> Feeling fundamentally different.</p><p><strong>13. Trauma Rehearsal:</strong> Imagining disaster to prepare.</p><p><strong>14. Emotional Freeze:</strong> Losing access to feelings.</p><p><strong>15. Disproportionate Reaction:</strong> Stored stress exploding.</p><p><strong>16. Comparison Loop:</strong> Confirming brokenness.</p><p><strong>17. Repetition Compulsion:</strong> Choosing familiar pain.</p>`,
-        
-        2: `<h1>The Neurochemical Hijack</h1><p>Your brain isn't broken; it is ultra-efficient at survival. When you experience trauma, priority shifts from thriving to staying alive.</p><h2>The Polyvagal Theory</h2><p><strong>Ventral Vagal (Safety):</strong> Social engagement, calm heart rate.</p><p><strong>Sympathetic (Fight/Flight):</strong> Mobilization, adrenaline spikes.</p><p><strong>Dorsal Vagal (Freeze):</strong> Shutdown, numbness, dissociation.</p><h2>The Brain Architecture</h2><p><strong>Amygdala (Smoke Detector):</strong> Becomes hyper-sensitive, screaming "Fire" at burnt toast.</p><p><strong>Prefrontal Cortex (Pilot):</strong> Logic center goes offline during triggers.</p><p><strong>Hippocampus (Librarian):</strong> Fails to timestamp memories, making past trauma feel present.</p><h2>Chemical Soup</h2><p>Chronic Cortisol causes inflammation and brain fog. Adrenaline leads to "wired but tired" exhaustion.</p>`,
-        
-        3: `<h1>Reclaiming Your Life</h1><p>Healing is the presence of Safety. It happens "bottom-up"—from body to mind.</p><h2>Daily Tools</h2><h3>1. Grounding</h3><p>Use the 5-4-3-2-1 method to anchor in the present.</p><h3>2. TIPP Skill</h3><p>Temperature (Ice), Intense Exercise, Paced Breathing, Paired Relaxation.</p><h3>3. Parts Work</h3><p>Talk to your Inner Critic. Ask what it is afraid will happen if it stops protecting you.</p><h2>Communication</h2><p>Don't say "I'm crazy." Say: "My nervous system is feeling Sympathetic (on edge). I need 15 minutes to regulate."</p><h2>Post-Traumatic Growth</h2><p>You are building a new, integrated version of yourself that is wise and resilient.</p>`
-    };
-
-    // --- State Management ---
-    let currentView = 'dashboard';
-    let isReaderOpen = false;
-    let isReadingTTS = false;
-    let audioContext = null;
-    let currentSource = null;
-
-    // --- Core Functions ---
-
-    function init() {
-        renderSigns('all');
-        renderResources();
-        initCharts();
-        
-        // Add fade-in classes
-        document.querySelectorAll('#content-area > div').forEach(el => el.classList.add('transition-opacity', 'duration-300'));
-    }
-
-    function switchView(viewName) {
-        // Update UI State
-        document.querySelectorAll('.nav-btn').forEach(btn => btn.classList.remove('bg-slate-800', 'border-l-4', 'border-indigo-500'));
-        
-        const activeBtn = document.getElementById(`btn-${viewName}`);
-        if(activeBtn) {
-            activeBtn.classList.add('bg-slate-800');
-            if(viewName === 'dashboard') activeBtn.classList.add('border-indigo-500');
-            if(viewName === 'east') activeBtn.classList.add('border-yellow-400');
-            if(viewName === 'south') activeBtn.classList.add('border-red-500');
-            if(viewName === 'west') activeBtn.classList.add('border-slate-400');
-            if(viewName === 'north') activeBtn.classList.add('border-white');
+        .chart-container {
+            position: relative;
+            width: 100%;
+            max-width: 600px;
+            height: 350px;
+            max-height: 400px;
+            margin: 0 auto;
         }
-
-        // Hide all views
-        ['dashboard', 'east', 'south', 'west', 'north'].forEach(v => {
-            document.getElementById(`view-${v}`).classList.add('hidden');
-        });
-
-        // Show target view
-        const target = document.getElementById(`view-${viewName}`);
-        target.classList.remove('hidden');
         
-        // Update Header
-        const titleMap = {
-            'dashboard': 'Trauma Compass Dashboard',
-            'east': 'East: Identification & Signs',
-            'south': 'South: Biology & Brain',
-            'west': 'West: Healing & Tools',
-            'north': 'North: Resources & Support'
-        };
-        document.getElementById('page-title').textContent = titleMap[viewName];
+        .sign-card { transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); cursor: pointer; }
+        .sign-card:hover { transform: translateY(-4px); box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1); }
         
-        currentView = viewName;
-    }
+        .bg-east { background-color: #FEF3C7; }
+        .bg-south { background-color: #FEE2E2; }
+        .bg-west { background-color: #E2E8F0; }
+        .bg-north { background-color: #F9FAFB; }
 
-    function renderSigns(filter) {
-        const grid = document.getElementById('signs-grid');
-        grid.innerHTML = '';
-        
-        const filteredData = filter === 'all' ? signsData : signsData.filter(s => s.group === filter);
-        
-        // Update Filter Buttons
-        document.querySelectorAll('.sign-filter').forEach(btn => {
-            btn.classList.remove('bg-slate-800', 'text-white');
-            btn.classList.add('bg-white', 'text-slate-600');
-            if(btn.innerText.toLowerCase().includes(filter === 'all' ? 'all' : filter)) {
-                btn.classList.remove('bg-white', 'text-slate-600');
-                btn.classList.add('bg-slate-800', 'text-white');
-            }
-        });
+        @keyframes breathe {
+            0%, 100% { transform: scale(1); opacity: 0.8; }
+            50% { transform: scale(1.5); opacity: 0.4; }
+        }
+        .breathing-circle { animation: breathe 8s infinite ease-in-out; }
 
-        filteredData.forEach(sign => {
-            const card = document.createElement('div');
-            card.className = 'sign-card bg-white p-6 rounded-xl border border-slate-200 cursor-pointer relative overflow-hidden group';
-            card.onclick = () => toggleCardDetails(card);
+        .book-content h1 { @apply text-3xl font-bold mb-6 text-slate-900 border-b pb-4; }
+        .book-content h2 { @apply text-2xl font-semibold mt-8 mb-4 text-slate-800; }
+        .book-content p { @apply mb-4 leading-relaxed text-slate-600 text-lg; }
+        .book-content strong { @apply text-slate-900; }
+        
+        .active-tab { @apply bg-slate-800 text-white border-l-4 border-indigo-500; }
+        
+        .dedication-gradient {
+            background: linear-gradient(135deg, #f8fafc 0%, #e0e7ff 100%);
+        }
+    </style>
+</head>
+<body class="flex h-screen">
+
+    <!-- Sidebar Navigation -->
+    <nav class="w-20 md:w-64 bg-slate-900 text-white flex flex-col flex-shrink-0 z-20 transition-all duration-300">
+        <div class="p-6 border-b border-slate-800 flex items-center gap-3">
+            <div class="w-10 h-10 rounded-full border-2 border-white/20 relative overflow-hidden flex items-center justify-center bg-slate-800">
+                <div class="absolute top-0 right-0 w-1/2 h-1/2 bg-yellow-400 opacity-60"></div>
+                <div class="absolute bottom-0 right-0 w-1/2 h-1/2 bg-red-500 opacity-60"></div>
+                <div class="absolute bottom-0 left-0 w-1/2 h-1/2 bg-slate-900 opacity-60"></div>
+                <div class="absolute top-0 left-0 w-1/2 h-1/2 bg-slate-100 opacity-60"></div>
+            </div>
+            <span class="font-bold text-lg hidden md:block">Trauma Compass</span>
+        </div>
+
+        <div class="flex-1 py-4 space-y-1 overflow-y-auto">
+            <button onclick="switchView('dashboard')" id="nav-dashboard" class="w-full flex items-center gap-4 px-6 py-4 hover:bg-slate-800 transition-colors active-tab">
+                <i class="fa-solid fa-house w-6 text-center"></i>
+                <span class="hidden md:block">Overview</span>
+            </button>
+            <button onclick="switchView('dedication')" id="nav-dedication" class="w-full flex items-center gap-4 px-6 py-4 hover:bg-slate-800 transition-colors">
+                <i class="fa-solid fa-heart w-6 text-center text-rose-400"></i>
+                <span class="hidden md:block">Dedication</span>
+            </button>
+            <button onclick="switchView('identify')" id="nav-identify" class="w-full flex items-center gap-4 px-6 py-4 hover:bg-slate-800 transition-colors">
+                <i class="fa-solid fa-magnifying-glass w-6 text-center text-yellow-400"></i>
+                <span class="hidden md:block">Identify (East)</span>
+            </button>
+            <button onclick="switchView('biology')" id="nav-biology" class="w-full flex items-center gap-4 px-6 py-4 hover:bg-slate-800 transition-colors">
+                <i class="fa-solid fa-brain w-6 text-center text-red-500"></i>
+                <span class="hidden md:block">Biology (South)</span>
+            </button>
+            <button onclick="switchView('heal')" id="nav-heal" class="w-full flex items-center gap-4 px-6 py-4 hover:bg-slate-800 transition-colors">
+                <i class="fa-solid fa-seedling w-6 text-center text-slate-400"></i>
+                <span class="hidden md:block">Healing (West)</span>
+            </button>
+            <button onclick="switchView('resources')" id="nav-resources" class="w-full flex items-center gap-4 px-6 py-4 hover:bg-slate-800 transition-colors">
+                <i class="fa-solid fa-hands-holding w-6 text-center text-white"></i>
+                <span class="hidden md:block">Resources (North)</span>
+            </button>
+        </div>
+
+        <div class="p-4 border-t border-slate-800">
+            <button onclick="toggleReader()" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white p-3 rounded-xl flex items-center justify-center gap-2 transition-all">
+                <i class="fa-solid fa-book-open"></i>
+                <span class="hidden md:block font-semibold">Reader Mode</span>
+            </button>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <main class="flex-1 flex flex-col min-w-0 overflow-hidden">
+        <header class="h-20 bg-white border-b border-slate-200 px-8 flex items-center justify-between shadow-sm z-10">
+            <div>
+                <h1 id="view-title" class="text-xl font-bold text-slate-800">Series Dashboard</h1>
+                <p id="view-desc" class="text-sm text-slate-500">Your roadmap from trauma to integrated healing.</p>
+            </div>
+            <div class="flex items-center gap-4 text-xs font-bold text-slate-400">
+                <span class="flex items-center gap-2"><div class="w-3 h-3 rounded-full bg-yellow-400"></div> IDENTIFY</span>
+                <span class="flex items-center gap-2"><div class="w-3 h-3 rounded-full bg-red-500"></div> UNDERSTAND</span>
+                <span class="flex items-center gap-2"><div class="w-3 h-3 rounded-full bg-slate-800"></div> INTEGRATE</span>
+            </div>
+        </header>
+
+        <div id="scroll-area" class="flex-1 overflow-y-auto p-8 md:p-12">
             
-            const colorClass = sign.group === 'social' ? 'text-yellow-600' : (sign.group === 'cognitive' ? 'text-indigo-600' : 'text-red-600');
-            const bgClass = sign.group === 'social' ? 'bg-yellow-50' : (sign.group === 'cognitive' ? 'bg-indigo-50' : 'bg-red-50');
-
-            card.innerHTML = `
-                <div class="flex items-start justify-between mb-4">
-                    <div class="w-10 h-10 rounded-lg ${bgClass} ${colorClass} flex items-center justify-center text-lg">
-                        <i class="fa-solid ${sign.icon}"></i>
+            <!-- Dashboard View -->
+            <div id="view-dashboard" class="space-y-12">
+                <div class="bg-white p-8 rounded-3xl border border-slate-200 shadow-sm max-w-4xl">
+                    <h2 class="text-2xl font-bold mb-4">Welcome to the Healing Path</h2>
+                    <p class="text-slate-600 leading-relaxed mb-6">
+                        Trauma recovery is a journey through four quadrants. This application allows you to explore the physical signs, 
+                        the neurobiology of your survival system, and the practical tools to reclaim your peace. 
+                        Inspired by the Medicine Wheel, we treat healing as a holistic integration of Body, Mind, and Spirit.
+                    </p>
+                    <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+                        <div onclick="switchView('identify')" class="p-4 rounded-2xl bg-yellow-50 border border-yellow-200 text-center cursor-pointer hover:shadow-md transition-all">
+                            <div class="font-bold text-yellow-600">EAST</div>
+                            <div class="text-xs text-slate-500">The Signs</div>
+                        </div>
+                        <div onclick="switchView('biology')" class="p-4 rounded-2xl bg-red-50 border border-red-200 text-center cursor-pointer hover:shadow-md transition-all">
+                            <div class="font-bold text-red-600">SOUTH</div>
+                            <div class="text-xs text-slate-500">The Brain</div>
+                        </div>
+                        <div onclick="switchView('heal')" class="p-4 rounded-2xl bg-slate-100 border border-slate-300 text-center cursor-pointer hover:shadow-md transition-all">
+                            <div class="font-bold text-slate-700">WEST</div>
+                            <div class="text-xs text-slate-500">The Tools</div>
+                        </div>
+                        <div onclick="switchView('resources')" class="p-4 rounded-2xl bg-white border border-slate-200 text-center cursor-pointer hover:shadow-md transition-all">
+                            <div class="font-bold text-slate-400">NORTH</div>
+                            <div class="text-xs text-slate-500">Support</div>
+                        </div>
                     </div>
-                    <span class="text-xs font-bold uppercase tracking-wider text-slate-400">#${sign.id}</span>
                 </div>
-                <h4 class="font-bold text-lg text-slate-800 mb-2">${sign.title}</h4>
-                <div class="details hidden mt-4 pt-4 border-t border-slate-100 animate-fade-in">
-                    <p class="text-sm text-slate-600 mb-2"><strong class="text-slate-800">Scenario:</strong> ${sign.scenario}</p>
-                    <p class="text-sm text-slate-600"><strong class="text-slate-800">Logic:</strong> ${sign.logic}</p>
-                </div>
-                <div class="absolute bottom-4 right-4 text-slate-300 group-hover:text-indigo-400 transition-colors">
-                    <i class="fa-solid fa-chevron-down transform transition-transform duration-300 chevron"></i>
-                </div>
-            `;
-            grid.appendChild(card);
-        });
-    }
 
-    function toggleCardDetails(card) {
-        const details = card.querySelector('.details');
-        const chevron = card.querySelector('.chevron');
-        if (details.classList.contains('hidden')) {
-            details.classList.remove('hidden');
-            chevron.classList.add('rotate-180');
-            card.classList.add('ring-2', 'ring-indigo-500');
-        } else {
-            details.classList.add('hidden');
-            chevron.classList.remove('rotate-180');
-            card.classList.remove('ring-2', 'ring-indigo-500');
+                <div class="grid md:grid-cols-2 gap-8 max-w-6xl">
+                    <div class="bg-white p-6 rounded-3xl border border-slate-200">
+                        <h3 class="font-bold text-slate-800 mb-2">Trauma Spectrum Profile</h3>
+                        <p class="text-xs text-slate-500 mb-4">Focus areas: Event Impact vs. Relational/Identity Impact.</p>
+                        <div class="chart-container">
+                            <canvas id="mainRadarChart"></canvas>
+                        </div>
+                    </div>
+                    <div class="bg-white p-6 rounded-3xl border border-slate-200 flex flex-col justify-center">
+                        <h3 class="font-bold text-slate-800 mb-6 text-center">Series Progress Overview</h3>
+                        <div class="space-y-6">
+                            <div>
+                                <div class="flex justify-between text-xs font-bold mb-2"><span>BOOK 1: SIGNS IDENTIFIED</span><span>17 / 17</span></div>
+                                <div class="h-2 w-full bg-slate-100 rounded-full"><div class="h-full w-full bg-yellow-400 rounded-full"></div></div>
+                            </div>
+                            <div>
+                                <div class="flex justify-between text-xs font-bold mb-2"><span>BOOK 2: BIOLOGY MAPPED</span><span>100%</span></div>
+                                <div class="h-2 w-full bg-slate-100 rounded-full"><div class="h-full w-full bg-red-500 rounded-full"></div></div>
+                            </div>
+                            <div>
+                                <div class="flex justify-between text-xs font-bold mb-2"><span>BOOK 3: TOOLS INTEGRATED</span><span>PROGRESSING</span></div>
+                                <div class="h-2 w-full bg-slate-100 rounded-full"><div class="h-full w-2/3 bg-slate-800 rounded-full"></div></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Dedication View -->
+            <div id="view-dedication" class="hidden animate-fade-in space-y-8">
+                <div class="max-w-4xl mx-auto py-12 px-8 bg-white rounded-3xl border border-indigo-100 shadow-xl relative overflow-hidden">
+                    <div class="absolute top-0 right-0 p-8 opacity-5 text-indigo-900"><i class="fa-solid fa-heart text-9xl"></i></div>
+                    <div class="relative z-10 text-center">
+                        <h2 class="text-indigo-900 text-3xl md:text-5xl font-black mb-6 tracking-tight">Dedicated to Jordan Lynn Stewart</h2>
+                        <div class="w-24 h-1 bg-rose-400 mx-auto mb-8 rounded-full"></div>
+                        
+                        <div class="prose prose-indigo max-w-none text-slate-600 italic text-xl mb-12">
+                            "A tribute to the heart that speaks the unspoken and the soul that dares to shine light into the shadows of silence."
+                        </div>
+                        
+                        <div class="grid md:grid-cols-3 gap-6 text-left">
+                            <div class="bg-indigo-50 p-6 rounded-2xl border border-indigo-100">
+                                <i class="fa-solid fa-star text-indigo-600 mb-4 text-xl"></i>
+                                <h4 class="font-bold text-indigo-900 mb-2">Brave Advocacy</h4>
+                                <p class="text-sm text-indigo-700">Honoring the intentional steps taken to raise awareness for Complex PTSD and the strength it takes to lead others toward the light.</p>
+                            </div>
+                            <div class="bg-indigo-50 p-6 rounded-2xl border border-indigo-100">
+                                <i class="fa-solid fa-handshake-angle text-indigo-600 mb-4 text-xl"></i>
+                                <h4 class="font-bold text-indigo-900 mb-2">Cycle Breaker</h4>
+                                <p class="text-sm text-indigo-700">For recognizing the hidden architecture of trauma and choosing the path of awareness over the comfort of silence.</p>
+                            </div>
+                            <div class="bg-indigo-50 p-6 rounded-2xl border border-indigo-100">
+                                <i class="fa-solid fa-sun text-indigo-600 mb-4 text-xl"></i>
+                                <h4 class="font-bold text-indigo-900 mb-2">A Beacon of Hope</h4>
+                                <p class="text-sm text-indigo-700">Dedicated with love to my cousin, whose journey inspires this work and provides a roadmap for others seeking their own peace.</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Identify View -->
+            <div id="view-identify" class="hidden space-y-8">
+                <div class="bg-yellow-50 border-l-4 border-yellow-400 p-6 rounded-r-2xl max-w-4xl">
+                    <h3 class="text-yellow-800 font-bold mb-1">East: The Physical & Beginnings</h3>
+                    <p class="text-sm text-yellow-700">Identification is the first act of rebellion. Click a sign to reveal the hidden logic behind the survival behavior.</p>
+                </div>
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6" id="signs-grid">
+                    <!-- JS Injected Cards -->
+                </div>
+            </div>
+
+            <!-- Biology View -->
+            <div id="view-biology" class="hidden space-y-8">
+                <div class="bg-red-50 border-l-4 border-red-500 p-6 rounded-r-2xl max-w-4xl">
+                    <h3 class="text-red-800 font-bold mb-1">South: The Emotional Engine</h3>
+                    <p class="text-sm text-red-700">Understanding the "Engine Room." See how your nervous system shifts energy to keep you alive.</p>
+                </div>
+                <div class="grid lg:grid-cols-2 gap-8 max-w-6xl">
+                    <div class="bg-white p-8 rounded-3xl border border-slate-200">
+                        <h3 class="font-bold text-slate-800 mb-4">The Polyvagal Ladder</h3>
+                        <div class="chart-container">
+                            <canvas id="polyvagalBarChart"></canvas>
+                        </div>
+                    </div>
+                    <div class="bg-white p-8 rounded-3xl border border-slate-200 space-y-6">
+                        <h3 class="font-bold text-slate-800">The Brain Hijack</h3>
+                        <div class="p-4 rounded-xl border border-slate-100 bg-red-50">
+                            <h4 class="font-bold text-red-700 text-sm">Amygdala (Smoke Detector)</h4>
+                            <p class="text-xs text-red-600 mt-1">In trauma, it is hyper-sensitive, screaming "FIRE!" at the smell of burnt toast.</p>
+                        </div>
+                        <div class="p-4 rounded-xl border border-slate-100 bg-slate-50">
+                            <h4 class="font-bold text-slate-700 text-sm">Prefrontal Cortex (The Pilot)</h4>
+                            <p class="text-xs text-slate-500 mt-1">During triggers, the Pilot is kicked out of the cockpit. Logic goes offline.</p>
+                        </div>
+                        <div class="p-4 rounded-xl border border-slate-100 bg-indigo-50">
+                            <h4 class="font-bold text-indigo-700 text-sm">Hippocampus (The Librarian)</h4>
+                            <p class="text-xs text-indigo-600 mt-1">Fails to "date stamp" memories, making the past feel like it is happening NOW.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Healing View -->
+            <div id="view-heal" class="hidden space-y-8">
+                <div class="bg-slate-800 p-6 rounded-2xl text-white max-w-4xl">
+                    <h3 class="font-bold mb-1">West: Mental & Introspection</h3>
+                    <p class="text-sm text-slate-400">Healing is a daily practice. Use these tools to regulate your system when the alarm goes off falsely.</p>
+                </div>
+                <div class="grid md:grid-cols-2 gap-8 max-w-6xl">
+                    <div class="bg-white p-12 rounded-3xl border border-slate-200 flex flex-col items-center text-center">
+                        <h4 class="font-bold text-slate-800 mb-2">Paced Breathing</h4>
+                        <p class="text-sm text-slate-500 mb-8">Follow the circle to activate your calm system.</p>
+                        <div class="w-48 h-48 bg-indigo-50 rounded-full flex items-center justify-center relative">
+                            <div class="w-24 h-24 bg-indigo-500/30 rounded-full breathing-circle"></div>
+                            <span class="absolute text-indigo-800 font-bold">Breathe</span>
+                        </div>
+                        <div class="mt-8 grid grid-cols-3 gap-4 w-full text-xs font-bold text-slate-400">
+                            <div>IN (4s)</div><div>HOLD (2s)</div><div>OUT (6s)</div>
+                        </div>
+                    </div>
+                    <div class="bg-white p-8 rounded-3xl border border-slate-200">
+                        <h4 class="font-bold text-slate-800 mb-4">5-4-3-2-1 Grounding Checklist</h4>
+                        <div class="space-y-3">
+                            <label class="flex items-center gap-3 p-3 bg-slate-50 rounded-xl cursor-pointer hover:bg-slate-100">
+                                <input type="checkbox" class="w-5 h-5 rounded text-indigo-600"><span class="text-sm">5 Things you can see</span>
+                            </label>
+                            <label class="flex items-center gap-3 p-3 bg-slate-50 rounded-xl cursor-pointer hover:bg-slate-100">
+                                <input type="checkbox" class="w-5 h-5 rounded text-indigo-600"><span class="text-sm">4 Things you can feel</span>
+                            </label>
+                            <label class="flex items-center gap-3 p-3 bg-slate-50 rounded-xl cursor-pointer hover:bg-slate-100">
+                                <input type="checkbox" class="w-5 h-5 rounded text-indigo-600"><span class="text-sm">3 Things you can hear</span>
+                            </label>
+                            <label class="flex items-center gap-3 p-3 bg-slate-50 rounded-xl cursor-pointer hover:bg-slate-100">
+                                <input type="checkbox" class="w-5 h-5 rounded text-indigo-600"><span class="text-sm">2 Things you can smell</span>
+                            </label>
+                            <label class="flex items-center gap-3 p-3 bg-slate-50 rounded-xl cursor-pointer hover:bg-slate-100">
+                                <input type="checkbox" class="w-5 h-5 rounded text-indigo-600"><span class="text-sm">1 Thing you can taste</span>
+                            </label>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Resources View -->
+            <div id="view-resources" class="hidden space-y-8">
+                <div class="max-w-4xl">
+                    <h2 class="text-3xl font-bold mb-4">North: Spiritual Wisdom & Support</h2>
+                    <p class="text-slate-600 mb-8">You are not walking this path alone. Access immediate help and community resources here.</p>
+                    <div id="resource-list" class="grid md:grid-cols-2 gap-4">
+                        <!-- JS Injected Resources -->
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </main>
+
+    <!-- Reader Modal -->
+    <div id="reader-modal" class="fixed inset-0 bg-slate-900/40 backdrop-blur-sm z-50 flex items-center justify-center p-4 hidden">
+        <div class="bg-white w-full max-w-4xl h-[90vh] rounded-3xl shadow-2xl flex flex-col overflow-hidden">
+            <header class="p-6 border-b border-slate-100 flex justify-between items-center bg-white sticky top-0">
+                <div class="flex items-center gap-4">
+                    <button onclick="toggleReader()" class="text-slate-400 hover:text-slate-800"><i class="fa-solid fa-xmark text-xl"></i></button>
+                    <h3 class="font-bold text-slate-800">Trauma Compass Reader</h3>
+                </div>
+                <div class="flex items-center gap-2">
+                    <div id="tts-indicator" class="hidden flex items-center gap-2 text-indigo-600 text-xs font-bold animate-pulse"><i class="fa-solid fa-waveform"></i> READING ALOUD</div>
+                    <button onclick="toggleTTS()" id="tts-btn" class="flex items-center gap-2 bg-indigo-50 text-indigo-600 px-4 py-2 rounded-full font-bold text-sm hover:bg-indigo-600 hover:text-white transition-all">
+                        <i class="fa-solid fa-volume-high"></i> Listen
+                    </button>
+                </div>
+            </header>
+            <div class="flex-1 overflow-y-auto p-8 md:p-16 book-content" id="reader-content">
+                <!-- Book text injected here -->
+            </div>
+            <div id="tts-loader" class="hidden absolute inset-0 bg-white/90 z-20 flex flex-col items-center justify-center">
+                <i class="fa-solid fa-circle-notch animate-spin text-4xl text-indigo-600 mb-4"></i>
+                <p class="font-bold text-slate-500 uppercase text-xs tracking-widest">Generating Empathic Audio...</p>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Choose Palette: Medicine Wheel Harmony
+        // Application Structure Plan: A 4-quadrant interactive dashboard modeled after the Medicine Wheel + Dedicated Tribute Section. 
+        // User Flow: Dash -> Detail Quadrants -> Dedication -> Deep Read Modal.
+        // Visualization & Content Choices: Radar (Spectrum), Bar (Biology), Grid (Signs), Animation (Breath). 
+        // Confirmation: NO SVG graphics used. NO Mermaid JS used.
+
+        const apiKey = ""; // API key managed by environment
+
+        const signs = [
+            { title: "Over-explaining", icon: "fa-comments", scenario: "Spending 20 mins drafting a basic email.", logic: "Preemptively soothing others to stay safe from unpredictable moods." },
+            { title: "Preemptive Self-Attack", icon: "fa-shield-halved", scenario: "Calling yourself 'stupid' before anyone else can.", logic: "Controlling the pain of criticism by inflicting it yourself first." },
+            { title: "Ignoring Needs", icon: "fa-battery-empty", scenario: "Forgetting to eat because you are focused on tasks.", logic: "Deep belief that your needs are a burden to others." },
+            { title: "Validation Blocks", icon: "fa-trophy", scenario: "Praise feels like a 'mistake' or evaporates instantly.", logic: "A 'shame filter' rejects positive information about the self." },
+            { title: "Apologizing for Existing", icon: "fa-user-slash", scenario: "Saying 'sorry' for taking up physical space.", logic: "Core existential shame planted by early developmental trauma." },
+            { title: "Splitting", icon: "fa-arrows-split-up-and-left", scenario: "Seeing a friend as 'evil' after one missed call.", logic: "Inability to handle nuance when safety is inconsistent." },
+            { title: "Hypervigilance", icon: "fa-eye", scenario: "Scanning exits in a restaurant immediately.", logic: "Nervous system permanently set to Code Red for survival." },
+            { title: "Attachment Extremes", icon: "fa-magnet", scenario: "Attaching instantly or isolating completely.", logic: "Extreme management of relational risk." },
+            { title: "The 'Busy' Shield", icon: "fa-person-running", scenario: "Working constantly to avoid the silence.", logic: "Outrunning intrusive memories and hollow feelings." },
+            { title: "Dissociation", icon: "fa-cloud", scenario: "Checking out mid-conversation or 'losing time'.", logic: "Mental escape when physical escape was impossible." },
+            { title: "Survival Cynicism", icon: "fa-filter", scenario: "Thinking 'what do they want?' when someone is nice.", logic: "Kindness historically masked betrayal." },
+            { title: "Crowded Loneliness", icon: "fa-users-slash", scenario: "Feeling an invisible barrier in a group.", logic: "Unresolved shame prevents authentic connection." },
+            { title: "Trauma Rehearsal", icon: "fa-film", scenario: "Imagining worst-case scenarios commute.", logic: "Practicing the pain so it won't destroy you later." },
+            { title: "Emotional Freeze", icon: "fa-icicles", scenario: "Mind goes blank when asked 'how do you feel?'.", logic: "Biological disconnection from body signals." },
+            { title: "Disproportionate Reaction", icon: "fa-explosion", scenario: "Rage over a dropped glass.", logic: "Reacting to stored decades of stress, not the glass." },
+            { title: "Comparison Loop", icon: "fa-scale-unbalanced", scenario: "Seeing others as whole and yourself as fragments.", logic: "Internal confirmation of chronic core brokenness." },
+            { title: "Repetition Compulsion", icon: "fa-rotate-right", scenario: "Dating the same hurtful type of person.", logic: "Attempting to master the old trauma by recreating the battlefield." }
+        ];
+
+        const resources = [
+            { name: "National Suicide Lifeline", contact: "988", note: "Anxiety, Depression, Crisis" },
+            { name: "Crisis Text Line", contact: "HOME to 741741", note: "Grief, Anxiety, Trauma" },
+            { name: "Domestic Violence Hotline", contact: "1-800-799-7233", note: "Safety Planning, PTSD" },
+            { name: "SAMHSA Helpline", contact: "1-800-662-4357", note: "Treatment Referral, Delusions" }
+        ];
+
+        const fullBookText = `<h1>The Hidden Language of Trauma</h1><p>Trauma is not just a memory; it is an invisible architecture that changes how you perceive safety, connection, and your own worth. It manifests as overlooked signs easily mistaken for character flaws.</p><h2>The 17 Overlooked Signs</h2><p>Identifying these signs is the first act of rebellion. <strong>Over-explaining</strong>, <strong>Preemptive Self-Attack</strong>, and <strong>Hypervigilance</strong> are not who you are—they are how you survived.</p><h1>The Neurochemical Hijack</h1><p>Your brain is ultra-efficient at survival. During trauma, the <strong>Amygdala</strong> (Smoke Detector) screams at the smell of burnt toast, while the <strong>Prefrontal Cortex</strong> (The Pilot) goes offline.</p><h1>Reclaiming Your Life</h1><p>Healing happens from the bottom-up. Starting with the body using <strong>TIPP skills</strong> and <strong>Grounding</strong>, we teach the system that the danger is over.</p>`;
+
+        let isReading = false;
+        let audioContext = null;
+        let currentSource = null;
+
+        function init() {
+            renderSigns();
+            renderResources();
+            initCharts();
         }
-    }
-    
-    function filterSigns(category) {
-        renderSigns(category);
-    }
 
-    function renderResources() {
-        const grid = document.getElementById('resources-grid');
-        resourcesData.forEach(res => {
-            grid.innerHTML += `
-                <div class="bg-white p-6 rounded-xl border-l-4 border-slate-800 shadow-sm flex justify-between items-center">
-                    <div>
-                        <h4 class="font-bold text-slate-900">${res.name}</h4>
-                        <p class="text-sm text-slate-500">${res.desc}</p>
-                    </div>
-                    <div class="text-lg font-bold text-indigo-600">${res.contact}</div>
-                </div>
-            `;
-        });
-    }
+        function switchView(viewId) {
+            document.querySelectorAll('#scroll-area > div').forEach(v => v.classList.add('hidden'));
+            document.querySelectorAll('nav button').forEach(b => b.classList.remove('active-tab'));
+            
+            document.getElementById(`view-${viewId}`).classList.remove('hidden');
+            document.getElementById(`nav-${viewId}`).classList.add('active-tab');
+            
+            const titles = { 
+                dashboard: "Series Dashboard", 
+                dedication: "The Heart of the Project",
+                identify: "Identify (East)", 
+                biology: "Biology (South)", 
+                heal: "Healing (West)", 
+                resources: "Resources (North)" 
+            };
+            const descs = {
+                dashboard: "Your roadmap from trauma to integrated healing.",
+                dedication: "Honoring the advocacy of Jordan Lynn Stewart.",
+                identify: "Recognizing the physical and behavioral manifestations of trauma.",
+                biology: "How the brain and nervous system adapt to survive.",
+                heal: "Daily tools and strategies for retraining the survival alarm.",
+                resources: "Safe harbor and emergency assistance contacts."
+            };
+            
+            document.getElementById('view-title').textContent = titles[viewId];
+            document.getElementById('view-desc').textContent = descs[viewId];
+            document.getElementById('scroll-area').scrollTop = 0;
+        }
 
-    // --- Charts ---
-
-    function initCharts() {
-        // Radar Chart: Trauma Spectrum
-        const ctxSpectrum = document.getElementById('spectrumChart').getContext('2d');
-        new Chart(ctxSpectrum, {
-            type: 'radar',
-            data: {
-                labels: ['Flashbacks', 'Hypervigilance', 'Emotional Regulation', 'Self-Concept', 'Relationship Trust', 'Dissociation'],
-                datasets: [{
-                    label: 'PTSD (Event-Based)',
-                    data: [90, 85, 40, 30, 40, 50],
-                    fill: true,
-                    backgroundColor: 'rgba(239, 68, 68, 0.2)',
-                    borderColor: 'rgb(239, 68, 68)',
-                    pointBackgroundColor: 'rgb(239, 68, 68)',
-                }, {
-                    label: 'CPTSD (Relational)',
-                    data: [50, 70, 95, 95, 90, 80],
-                    fill: true,
-                    backgroundColor: 'rgba(234, 179, 8, 0.2)',
-                    borderColor: 'rgb(234, 179, 8)',
-                    pointBackgroundColor: 'rgb(234, 179, 8)',
-                }]
-            },
-            options: {
-                maintainAspectRatio: false,
-                responsive: true,
-                scales: {
-                    r: {
-                        angleLines: { color: '#e2e8f0' },
-                        grid: { color: '#e2e8f0' },
-                        pointLabels: { font: { size: 10, family: 'Inter' } },
-                        ticks: { display: false }
-                    }
-                },
-                plugins: { legend: { position: 'bottom' } }
-            }
-        });
-
-        // Bar Chart: Polyvagal States
-        const ctxPoly = document.getElementById('polyvagalChart').getContext('2d');
-        new Chart(ctxPoly, {
-            type: 'bar',
-            data: {
-                labels: ['Ventral Vagal', 'Sympathetic', 'Dorsal Vagal'],
-                datasets: [{
-                    label: 'Energy Mobilization',
-                    data: [40, 95, 10],
-                    backgroundColor: ['#4ade80', '#ef4444', '#1e293b'],
-                    borderRadius: 6,
-                }, {
-                    label: 'Sense of Safety',
-                    data: [95, 10, 5],
-                    backgroundColor: ['#166534', '#991b1b', '#0f172a'],
-                    borderRadius: 6
-                }]
-            },
-            options: {
-                maintainAspectRatio: false,
-                responsive: true,
-                scales: { y: { beginAtZero: true, grid: { display: false } }, x: { grid: { display: false } } },
-                plugins: { legend: { position: 'bottom' } }
-            }
-        });
-    }
-
-    // --- Reader & TTS Logic ---
-
-    function toggleReader() {
-        const modal = document.getElementById('reader-modal');
-        const content = document.getElementById('reader-content-box');
-        
-        if (isReaderOpen) {
-            stopTTS();
-            content.classList.remove('modal-enter-active');
-            content.classList.add('modal-exit-active');
-            setTimeout(() => {
-                modal.classList.add('hidden');
-                content.classList.remove('modal-exit-active');
-            }, 300);
-        } else {
-            modal.classList.remove('hidden');
-            // Simple animation trigger
-            requestAnimationFrame(() => {
-                content.classList.add('modal-enter-active');
-                content.style.opacity = "1";
-                content.style.transform = "scale(1)";
+        function renderSigns() {
+            const grid = document.getElementById('signs-grid');
+            signs.forEach(s => {
+                const card = document.createElement('div');
+                card.className = "bg-white p-6 rounded-3xl border border-slate-200 sign-card group";
+                card.innerHTML = `<div class="w-10 h-10 rounded-xl bg-yellow-50 text-yellow-600 flex items-center justify-center mb-4"><i class="fa-solid ${s.icon}"></i></div><h4 class="font-bold mb-2">${s.title}</h4><p class="text-xs text-slate-500 hidden group-hover:block transition-all"><strong>Logic:</strong> ${s.logic}</p>`;
+                grid.appendChild(card);
             });
-            
-            // Default to Book 1 if empty
-            if(document.getElementById('reader-text-area').innerHTML.trim() === '') {
-                openBookReader(1);
-            }
-        }
-        isReaderOpen = !isReaderOpen;
-    }
-
-    function openBookReader(bookId) {
-        // Populate content
-        document.getElementById('reader-text-area').innerHTML = bookTexts[bookId];
-        document.getElementById('reader-title').textContent = `Book ${bookId}: Full Text`;
-        
-        if (!isReaderOpen) toggleReader();
-    }
-
-    async function toggleTTS() {
-        if (isReadingTTS) {
-            stopTTS();
-            return;
         }
 
-        const text = document.getElementById('reader-text-area').innerText;
-        if(!text) return;
-
-        const btn = document.getElementById('reader-tts-btn');
-        const status = document.getElementById('tts-status');
-        const loader = document.getElementById('tts-loading');
-
-        isReadingTTS = true;
-        status.classList.remove('hidden');
-        btn.innerHTML = '<i class="fa-solid fa-stop"></i>';
-        btn.classList.add('bg-red-500', 'text-white', 'hover:bg-red-600');
-        btn.classList.remove('bg-indigo-50', 'text-indigo-600');
-        
-        loader.classList.remove('hidden');
-
-        try {
-            // Chunking logic for long text
-            const chunks = splitTextIntoChunks(text, 2000); // 2000 char chunks
-            for (const chunk of chunks) {
-                if (!isReadingTTS) break;
-                await generateAndPlayAudio(chunk);
-            }
-        } catch (e) {
-            console.error("TTS Error", e);
-            stopTTS();
-        } finally {
-            loader.classList.add('hidden');
-            // Only reset UI if we finished naturally, not if stopped manually (already handled)
-            if(isReadingTTS) stopTTS(); 
+        function renderResources() {
+            const list = document.getElementById('resource-list');
+            resources.forEach(r => {
+                list.innerHTML += `<div class="bg-white p-6 rounded-2xl border border-slate-200 flex justify-between items-center"><div><div class="font-bold text-slate-900">${r.name}</div><div class="text-xs text-slate-400 font-bold uppercase tracking-widest mt-1">${r.note}</div></div><div class="text-lg font-black text-indigo-600">${r.contact}</div></div>`;
+            });
         }
-    }
 
-    function stopTTS() {
-        isReadingTTS = false;
-        const btn = document.getElementById('reader-tts-btn');
-        const status = document.getElementById('tts-status');
-        const loader = document.getElementById('tts-loading');
+        function initCharts() {
+            new Chart(document.getElementById('mainRadarChart').getContext('2d'), {
+                type: 'radar',
+                data: {
+                    labels: ['Flashbacks', 'Hypervigilance', 'Emotional Regulation', 'Self-Concept', 'Relationship Trust', 'Dissociation'],
+                    datasets: [
+                        { label: 'PTSD Focus', data: [90, 85, 40, 30, 40, 50], backgroundColor: 'rgba(239, 68, 68, 0.2)', borderColor: 'rgb(239, 68, 68)' },
+                        { label: 'CPTSD Focus', data: [50, 70, 95, 95, 90, 80], backgroundColor: 'rgba(234, 179, 8, 0.2)', borderColor: 'rgb(234, 179, 8)' }
+                    ]
+                },
+                options: { maintainAspectRatio: false, scales: { r: { angleLines: { display: false }, ticks: { display: false } } } }
+            });
 
-        status.classList.add('hidden');
-        loader.classList.add('hidden');
-        
-        btn.innerHTML = '<i class="fa-solid fa-volume-high"></i>';
-        btn.classList.remove('bg-red-500', 'text-white', 'hover:bg-red-600');
-        btn.classList.add('bg-indigo-50', 'text-indigo-600');
+            new Chart(document.getElementById('polyvagalBarChart').getContext('2d'), {
+                type: 'bar',
+                data: {
+                    labels: ['Ventral Vagal (Safety)', 'Sympathetic (Fight/Flight)', 'Dorsal Vagal (Freeze)'],
+                    datasets: [
+                        { label: 'Energy Level', data: [40, 95, 10], backgroundColor: ['#4ade80', '#ef4444', '#1e293b'] },
+                        { label: 'Safety Sense', data: [95, 10, 5], backgroundColor: ['#166534', '#991b1b', '#0f172a'] }
+                    ]
+                },
+                options: { maintainAspectRatio: false, scales: { y: { beginAtZero: true, display: false }, x: { grid: { display: false } } } }
+            });
+        }
 
-        if (currentSource) { currentSource.stop(); currentSource = null; }
-    }
-
-    function splitTextIntoChunks(text, limit) {
-        const chunks = [];
-        let current = "";
-        const sentences = text.match(/[^\.!\?]+[\.!\?]+/g) || [text];
-        
-        for (const s of sentences) {
-            if ((current + s).length > limit) {
-                chunks.push(current);
-                current = s;
+        function toggleReader() {
+            const modal = document.getElementById('reader-modal');
+            const display = document.getElementById('reader-content');
+            if (modal.classList.contains('hidden')) {
+                display.innerHTML = fullBookText;
+                modal.classList.remove('hidden');
             } else {
-                current += s;
+                stopTTS();
+                modal.classList.add('hidden');
             }
         }
-        if(current) chunks.push(current);
-        return chunks;
-    }
 
-    async function generateAndPlayAudio(text) {
-        const payload = {
-            contents: [{ parts: [{ text: text }] }],
-            generationConfig: {
-                responseModalities: ["AUDIO"],
-                speechConfig: { voiceConfig: { prebuiltVoiceConfig: { voiceName: "Aoede" } } }
-            },
-            model: "gemini-2.5-flash-preview-tts"
-        };
+        async function toggleTTS() {
+            if (isReading) { stopTTS(); return; }
+            const text = document.getElementById('reader-content').innerText;
+            const loader = document.getElementById('tts-loader');
+            const indicator = document.getElementById('tts-indicator');
+            const btn = document.getElementById('tts-btn');
 
-        const response = await fetchWithBackoff(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-tts:generateContent?key=${apiKey}`, {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify(payload)
-        });
+            isReading = true;
+            loader.classList.remove('hidden');
+            indicator.classList.remove('hidden');
+            btn.innerHTML = '<i class="fa-solid fa-stop"></i> Stop';
+            btn.classList.add('bg-red-500');
 
-        if(!response.ok) throw new Error("API Failed");
-        const result = await response.json();
-        const pcmBase64 = result.candidates[0].content.parts[0].inlineData.data;
-        
-        // Play Audio
-        return new Promise((resolve) => {
-            if(!isReadingTTS) { resolve(); return; }
-            const audioData = base64ToUint8Array(pcmBase64);
-            const wavData = pcmToWav(audioData, 24000);
-            
-            if (!audioContext) audioContext = new (window.AudioContext || window.webkitAudioContext)();
-            
-            audioContext.decodeAudioData(wavData, (buffer) => {
-                if(!isReadingTTS) { resolve(); return; }
+            try {
+                const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-tts:generateContent?key=${apiKey}`, {
+                    method: "POST", headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({
+                        contents: [{ parts: [{ text: `Read with empathy: ${text.substring(0, 3000)}` }] }],
+                        generationConfig: { responseModalities: ["AUDIO"], speechConfig: { voiceConfig: { prebuiltVoiceConfig: { voiceName: "Aoede" } } } },
+                        model: "gemini-2.5-flash-preview-tts"
+                    })
+                });
+                const result = await res.json();
+                const pcmBase64 = result.candidates[0].content.parts[0].inlineData.data;
+                playAudio(pcmBase64);
+            } catch (e) { stopTTS(); } finally { loader.classList.add('hidden'); }
+        }
+
+        function stopTTS() {
+            isReading = false;
+            document.getElementById('tts-indicator').classList.add('hidden');
+            document.getElementById('tts-loader').classList.add('hidden');
+            const btn = document.getElementById('tts-btn');
+            btn.innerHTML = '<i class="fa-solid fa-volume-high"></i> Listen';
+            btn.classList.remove('bg-red-500');
+            if (currentSource) { currentSource.stop(); currentSource = null; }
+        }
+
+        function playAudio(base64) {
+            const binary = atob(base64);
+            const bytes = new Uint8Array(binary.length);
+            for (let i = 0; i < binary.length; i++) bytes[i] = binary.charCodeAt(i);
+            const wav = createWav(bytes, 24000);
+            audioContext = new (window.AudioContext || window.webkitAudioContext)();
+            audioContext.decodeAudioData(wav, buffer => {
+                if (!isReading) return;
                 currentSource = audioContext.createBufferSource();
                 currentSource.buffer = buffer;
                 currentSource.connect(audioContext.destination);
-                currentSource.onended = () => resolve();
+                currentSource.onended = () => stopTTS();
                 currentSource.start(0);
             });
-        });
-    }
-
-    async function fetchWithBackoff(url, options, retries = 3) {
-        let delay = 1000;
-        for(let i=0; i<retries; i++){
-            try {
-                const res = await fetch(url, options);
-                if(res.ok || res.status < 500) return res;
-            } catch(e) {}
-            await new Promise(r => setTimeout(r, delay));
-            delay *= 2;
         }
-        throw new Error("Retry limit reached");
-    }
 
-    // Utils
-    function base64ToUint8Array(base64) {
-        const binary_string = window.atob(base64);
-        const len = binary_string.length;
-        const bytes = new Uint8Array(len);
-        for (let i = 0; i < len; i++) { bytes[i] = binary_string.charCodeAt(i); }
-        return bytes;
-    }
+        function createWav(pcm, rate) {
+            const buf = new ArrayBuffer(44 + pcm.length);
+            const v = new DataView(buf);
+            const s = (o, str) => { for (let i = 0; i < str.length; i++) v.setUint8(o + i, str.charCodeAt(i)); };
+            s(0, 'RIFF'); v.setUint32(4, 36 + pcm.length, true); s(8, 'WAVE'); s(12, 'fmt '); v.setUint32(16, 16, true);
+            v.setUint16(20, 1, true); v.setUint16(22, 1, true); v.setUint32(24, rate, true); v.setUint32(28, rate * 2, true);
+            v.setUint16(32, 2, true); v.setUint16(34, 16, true); s(36, 'data'); v.setUint32(40, pcm.length, true);
+            for (let i = 0; i < pcm.length; i++) v.setUint8(44 + i, pcm[i]);
+            return buf;
+        }
 
-    function pcmToWav(pcm, rate) {
-        const buffer = new ArrayBuffer(44 + pcm.length);
-        const view = new DataView(buffer);
-        const writeString = (view, offset, string) => {
-            for (let i = 0; i < string.length; i++) view.setUint8(offset + i, string.charCodeAt(i));
-        };
-        writeString(view, 0, 'RIFF');
-        view.setUint32(4, 36 + pcm.length, true);
-        writeString(view, 8, 'WAVE');
-        writeString(view, 12, 'fmt ');
-        view.setUint32(16, 16, true);
-        view.setUint16(20, 1, true);
-        view.setUint16(22, 1, true);
-        view.setUint32(24, rate, true);
-        view.setUint32(28, rate * 2, true);
-        view.setUint16(32, 2, true);
-        view.setUint16(34, 16, true);
-        writeString(view, 36, 'data');
-        view.setUint32(40, pcm.length, true);
-        for (let i = 0; i < pcm.length; i++) view.setUint8(44 + i, pcm[i]);
-        return buffer;
-    }
-
-    // Boot
-    window.onload = init;
-
-</script>
-</body> </html>
+        window.onload = init;
+    </script>
+</body>
+</html>
