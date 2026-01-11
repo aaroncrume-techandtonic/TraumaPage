@@ -1,251 +1,463 @@
- <script>
-        // Data Structure
-        const signs = [
-            { title: "Over-explaining", icon: "fa-comments", scenario: "Spending 20 mins drafting a basic email.", logic: "Preemptively soothing others to stay safe from unpredictable moods." },
-            { title: "Preemptive Self-Attack", icon: "fa-shield-halved", scenario: "Calling yourself 'stupid' before anyone else can.", logic: "Controlling the pain of criticism by inflicting it yourself first." },
-            { title: "Ignoring Needs", icon: "fa-battery-empty", scenario: "Forgetting to eat because you are focused on tasks.", logic: "Deep belief that your needs are a burden to others." },
-            { title: "Validation Blocks", icon: "fa-trophy", scenario: "Praise feels like a 'mistake' or evaporates instantly.", logic: "A 'shame filter' rejects positive information about the self." },
-            { title: "Apologizing for Existing", icon: "fa-user-slash", scenario: "Saying 'sorry' for taking up physical space.", logic: "Core existential shame planted by early developmental trauma." },
-            { title: "Splitting", icon: "fa-arrows-split-up-and-left", scenario: "Seeing a friend as 'evil' after one missed call.", logic: "Inability to handle nuance when safety is inconsistent." },
-            { title: "Hypervigilance", icon: "fa-eye", scenario: "Scanning exits in a restaurant immediately.", logic: "Nervous system permanently set to Code Red for survival." },
-            { title: "Attachment Extremes", icon: "fa-magnet", scenario: "Attaching instantly or isolating completely.", logic: "Extreme management of relational risk." },
-            { title: "The 'Busy' Shield", icon: "fa-person-running", scenario: "Working constantly to avoid the silence.", logic: "Outrunning intrusive memories and hollow feelings." },
-            { title: "Dissociation", icon: "fa-cloud", scenario: "Checking out mid-conversation or 'losing time'.", logic: "Mental escape when physical escape was impossible." },
-            { title: "Survival Cynicism", icon: "fa-filter", scenario: "Thinking 'what do they want?' when someone is nice.", logic: "Kindness historically masked betrayal." },
-            { title: "Crowded Loneliness", icon: "fa-users-slash", scenario: "Feeling an invisible barrier in a group.", logic: "Unresolved shame prevents authentic connection." },
-            { title: "Trauma Rehearsal", icon: "fa-film", scenario: "Imagining worst-case scenarios commute.", logic: "Practicing the pain so it won't destroy you later." },
-            { title: "Emotional Freeze", icon: "fa-icicles", scenario: "Mind goes blank when asked 'how do you feel?'.", logic: "Biological disconnection from body signals." },
-            { title: "Disproportionate Reaction", icon: "fa-explosion", scenario: "Rage over a dropped glass.", logic: "Reacting to stored decades of stress, not the glass." },
-            { title: "Comparison Loop", icon: "fa-scale-unbalanced", scenario: "Seeing others as whole and yourself as fragments.", logic: "Internal confirmation of chronic core brokenness." },
-            { title: "Repetition Compulsion", icon: "fa-rotate-right", scenario: "Dating the same hurtful type of person.", logic: "Attempting to master the old trauma by recreating the battlefield." }
-        ];
+import React, { useState, useEffect } from 'react';
+import { 
+  BookOpen, 
+  Brain, 
+  Trophy, 
+  ChevronRight, 
+  RotateCcw, 
+  Volume2, 
+  Home,
+  Star,
+  Settings,
+  Sun,
+  Snowflake,
+  Heart,
+  Users,
+  Feather,
+  Compass,
+  X
+} from 'lucide-react';
 
-        const resources = [
-            { name: "National Suicide Lifeline", contact: "988", note: "Anxiety, Depression, Crisis" },
-            { name: "Crisis Text Line", contact: "HOME to 741741", note: "Grief, Anxiety, Trauma" },
-            { name: "Domestic Violence Hotline", contact: "1-800-799-7233", note: "Safety Planning, PTSD" },
-            { name: "SAMHSA Helpline", contact: "1-800-662-4357", note: "Treatment Referral, Delusions" }
-        ];
+// --- Data: Klamath Language ---
 
-        const fullBookText = `
-            <h1>Book 1: The Hidden Language of Trauma</h1>
-            <p>Trauma is not just a memory; it is an invisible architecture that changes how you perceive safety, connection, and your own worth. It manifests as overlooked signs easily mistaken for character flaws.</p>
+const CATEGORIES = [
+  {
+    id: 'east',
+    title: 'Greetings (East)',
+    subtitle: 'New Beginnings',
+    icon: <Sun size={32} />,
+    // High Contrast Yellow
+    bgColor: 'bg-yellow-400',
+    textColor: 'text-black',
+    borderColor: 'border-yellow-600',
+    buttonColor: 'bg-black text-yellow-400 hover:bg-slate-900',
+    accentColor: 'text-black',
+    words: [
+      { id: 1, target: 'Waq lis ʔi?', native: 'How are you?', pronunciation: 'walk-leese-ee' },
+      { id: 2, target: 'Sepk\'eec\'a', native: 'Thank you', pronunciation: 'sep-kay-cha' },
+      { id: 3, target: 'Moo dic', native: 'Very good', pronunciation: 'moo ditch' },
+      { id: 4, target: 'At ma', native: 'Goodbye (Now you)', pronunciation: 'ot ma' },
+      { id: 5, target: 'E', native: 'Yes', pronunciation: 'eh' },
+    ]
+  },
+  {
+    id: 'south',
+    title: 'Colors (South)',
+    subtitle: 'Growth & Life',
+    icon: <Heart size={32} />,
+    // High Contrast Red
+    bgColor: 'bg-red-700',
+    textColor: 'text-white',
+    borderColor: 'border-red-900',
+    buttonColor: 'bg-white text-red-700 hover:bg-slate-100',
+    accentColor: 'text-white',
+    words: [
+      { id: 6, target: 'Taktakli', native: 'Red', pronunciation: 'tock-tock-lee' },
+      { id: 7, target: 'Gekgekli', native: 'Yellow', pronunciation: 'geck-geck-lee' },
+      { id: 8, target: 'Bosbosli', native: 'Black', pronunciation: 'boss-boss-lee' },
+      { id: 9, target: 'Balbali', native: 'White', pronunciation: 'ball-ball-ee' },
+      { id: 10, target: 'Mecmecli', native: 'Blue', pronunciation: 'metch-metch-lee' },
+    ]
+  },
+  {
+    id: 'west',
+    title: 'Family (West)',
+    subtitle: 'Introspection',
+    icon: <Users size={32} />,
+    // High Contrast Black
+    bgColor: 'bg-black',
+    textColor: 'text-white',
+    borderColor: 'border-slate-700',
+    buttonColor: 'bg-white text-black hover:bg-slate-200',
+    accentColor: 'text-white',
+    words: [
+      { id: 11, target: 'Pkisap', native: 'Mother', pronunciation: 'p-key-sop' },
+      { id: 12, target: 'Ptisap', native: 'Father', pronunciation: 'p-tea-sop' },
+      { id: 13, target: 'Maqlaqs', native: 'Person / People', pronunciation: 'mock-locks' },
+      { id: 14, target: 'Ewksiknii', native: 'Klamath Lake People', pronunciation: 'ewk-sick-nee' },
+      { id: 15, target: 'M\'ok\'aak', native: 'Baby', pronunciation: 'm-ok-awk' },
+    ]
+  },
+  {
+    id: 'north',
+    title: 'Winter/Nature (North)',
+    subtitle: 'Wisdom',
+    icon: <Snowflake size={32} />,
+    // High Contrast White
+    bgColor: 'bg-white',
+    textColor: 'text-black',
+    borderColor: 'border-black',
+    buttonColor: 'bg-black text-white hover:bg-slate-800',
+    accentColor: 'text-black',
+    words: [
+      { id: 16, target: 'Loldam', native: 'Winter', pronunciation: 'lool-tum' },
+      { id: 17, target: 'Keys', native: 'Snow', pronunciation: 'kay-s' },
+      { id: 18, target: 'Slewys', native: 'Wind', pronunciation: 'slou-weash' },
+      { id: 19, target: 'We', native: 'Ice', pronunciation: 'waa' },
+      { id: 20, target: 'P\'as', native: 'Food', pronunciation: 'pah-s' },
+    ]
+  }
+];
+
+// --- Components ---
+
+const ProgressBar = ({ current, total, activeCategory }) => (
+  <div className="w-full h-3 bg-slate-300 rounded-full overflow-hidden border border-slate-400">
+    <div 
+      className={`h-full transition-all duration-500 ease-out ${activeCategory ? activeCategory.bgColor : 'bg-black'}`}
+      style={{ width: `${(current / total) * 100}%` }}
+    />
+  </div>
+);
+
+const Card = ({ children, className = '', onClick, style = {} }) => (
+  <div 
+    onClick={onClick}
+    className={`rounded-xl border-4 p-6 relative overflow-hidden shadow-lg hover:shadow-xl transition-all ${className}`}
+    style={style}
+  >
+    {children}
+  </div>
+);
+
+// --- Main App Component ---
+
+export default function App() {
+  const [view, setView] = useState('home'); // home, learn, quiz, result
+  const [activeCategory, setActiveCategory] = useState(null);
+  const [currentIndex, setCurrentIndex] = useState(0);
+  const [isFlipped, setIsFlipped] = useState(false);
+  const [quizScore, setQuizScore] = useState(0);
+  const [streak, setStreak] = useState(5);
+  const [xp, setXp] = useState(2450);
+
+  // Audio Handler
+  const playAudio = (pronunciation) => {
+    if ('speechSynthesis' in window) {
+      // Cancel any currently playing speech
+      window.speechSynthesis.cancel();
+      
+      const utterance = new SpeechSynthesisUtterance(pronunciation);
+      // Try to find a clear English voice to read the phonetic spelling
+      const voices = window.speechSynthesis.getVoices();
+      const preferredVoice = voices.find(voice => voice.lang === 'en-US' && !voice.name.includes('Google')); // Fallback logic
+      if (preferredVoice) utterance.voice = preferredVoice;
+      
+      utterance.rate = 0.8; // Slower for clarity
+      utterance.pitch = 1;
+      window.speechSynthesis.speak(utterance);
+    }
+  };
+
+  const startSession = (category, mode) => {
+    setActiveCategory(category);
+    setCurrentIndex(0);
+    setIsFlipped(false);
+    setQuizScore(0);
+    setView(mode);
+  };
+
+  const handleNext = () => {
+    if (!activeCategory) return;
+    setIsFlipped(false);
+    
+    if (currentIndex < activeCategory.words.length - 1) {
+      setTimeout(() => setCurrentIndex(c => c + 1), 150);
+    } else {
+      if (view === 'quiz') {
+        setView('result');
+      } else {
+        setView('home'); 
+        setXp(x => x + 50);
+      }
+    }
+  };
+
+  const handleQuizAnswer = (isCorrect) => {
+    if (isCorrect) {
+      setQuizScore(s => s + 1);
+    }
+    handleNext();
+  };
+
+  // --- Views ---
+
+  const HomeScreen = () => (
+    <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
+      {/* Header with Medicine Wheel Motif */}
+      <div className="relative overflow-hidden bg-black text-white p-6 rounded-3xl shadow-xl border-b-8 border-yellow-500">
+        <div className="absolute top-0 right-0 p-4 opacity-20 text-yellow-500">
+          <Compass size={140} />
+        </div>
+        <div className="relative z-10">
+          <h1 className="text-3xl font-black mb-1 tracking-tight">MAQLAQS</h1>
+          <p className="text-slate-300 text-sm font-medium mb-6 uppercase tracking-widest">Medicine Wheel Learning</p>
+          
+          <div className="flex gap-4">
+            <div className="bg-yellow-500 text-black px-4 py-2 rounded-lg flex items-center gap-2 font-bold shadow-md">
+              <span className="text-xl">🔥</span>
+              <span>{streak} Days</span>
+            </div>
+            <div className="bg-red-600 text-white px-4 py-2 rounded-lg flex items-center gap-2 font-bold shadow-md">
+              <span className="text-xl">💎</span>
+              <span>{xp} XP</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Categories Grid */}
+      <div className="space-y-4 pb-20">
+        <h2 className="font-black text-black text-xl px-2 flex items-center gap-2 uppercase">
+          <Feather size={24} className="text-black" />
+          The Four Directions
+        </h2>
+        {CATEGORIES.map(cat => (
+          <Card 
+            key={cat.id} 
+            className={`${cat.bgColor} ${cat.textColor} ${cat.borderColor}`}
+          >
+            <div className="flex items-start justify-between mb-4">
+              <div className="flex items-center gap-4">
+                <div className={`w-14 h-14 rounded-full bg-white/20 backdrop-blur-sm border-2 border-current flex items-center justify-center`}>
+                  {cat.icon}
+                </div>
+                <div>
+                  <h3 className="font-black text-xl uppercase tracking-wide">{cat.title}</h3>
+                  <p className="text-xs font-bold uppercase tracking-widest opacity-90">{cat.subtitle}</p>
+                </div>
+              </div>
+            </div>
             
-            <h2>Part I: The 17 Overlooked Signs</h2>
-            <p><strong>1. Over-explaining:</strong> You draft emails for 20 minutes to avoid "danger." This is a survival response to unpredictable moods, where you preemptively soothe others to stay safe.</p>
-            <p><strong>2. Preemptive Self-Attack:</strong> You call yourself "stupid" before anyone else can. By inflicting the pain yourself first, you feel a distorted sense of control over external criticism.</p>
-            <p><strong>3. Ignoring Needs:</strong> You forget to eat or sleep because you are focused on tasks or others. This stems from a deep belief that your needs are a burden to the world.</p>
-            <p><strong>4. Validation Blocks:</strong> Praise feels like a "mistake" or evaporates instantly. A "shame filter" in your brain rejects positive information about your self-worth.</p>
-            <p><strong>5. Apologizing for Existing:</strong> Saying "sorry" for taking up physical space or simply having a presence. This is core existential shame planted by early developmental trauma.</p>
-            <p><strong>6. Splitting:</strong> Seeing the world as all-good or all-bad. Nuance feels unsafe when your early safety was inconsistent.</p>
-            <p><strong>7. Hypervigilance:</strong> Scanning every exit and tracking every facial change in a room. Your nervous system is permanently set to Code Red for survival.</p>
-            <p><strong>8. Attachment Extremes:</strong> You either dive into a relationship within 48 hours to secure "safety," or you keep everyone at a ten-foot distance. Both are desperate attempts to manage relational risk.</p>
-            <p><strong>9. The "Busy" Shield:</strong> If you stop moving, the feelings catch up. You use work or tasks as a way to outrun intrusive memories and hollow feelings.</p>
-            <p><strong>10. Dissociation:</strong> Checking out mid-conversation or "losing time." This was a brilliant survival tool when you couldn't physically escape; your mind learned to leave instead.</p>
-            <p><strong>11. Survival Cynicism:</strong> Kindness feels like a trap. When someone is nice, your first thought is "what do they want from me?" because kindness historically masked betrayal.</p>
-            <p><strong>12. The "Crowded Room" Loneliness:</strong> Even with loved ones, you feel an invisible barrier. You feel fundamentally different, as if you lack the "manual for life" everyone else has.</p>
-            <p><strong>13. Trauma Rehearsal:</strong> You spend your commute imagining the worst-case scenarios. You believe that by "practicing" the pain, you won't be destroyed when it happens.</p>
-            <p><strong>14. The Emotional Freeze:</strong> When asked "how do you feel?", your mind goes blank. This is biological disconnection from your body's emotional signals (Interoception).</p>
-            <p><strong>15. The Disproportionate Reaction:</strong> A small mistake triggers a massive wave of rage. You are reacting to decades of stored stress that the immediate trigger just unlocked.</p>
-            <p><strong>16. The Comparison Loop:</strong> You see "wholeness" in others and "fragments" in yourself, using their highlights to confirm your belief that you are uniquely broken.</p>
-            <p><strong>17. Repetition Compulsion:</strong> You find yourself in the same hurtful relationship dynamics. Your subconscious is trying to "win" the old war by recreating the battlefield, hoping for a different outcome.</p>
+            <div className="flex gap-3 mt-4">
+              <button 
+                onClick={() => startSession(cat, 'learn')}
+                className={`flex-1 px-4 py-3 rounded-xl text-base font-black uppercase tracking-wider transition-transform active:scale-95 flex items-center justify-center gap-2 shadow-lg border-2 border-transparent ${cat.buttonColor}`}
+              >
+                <BookOpen size={18} /> Learn
+              </button>
+              <button 
+                onClick={() => startSession(cat, 'quiz')}
+                className={`flex-1 px-4 py-3 rounded-xl text-base font-black uppercase tracking-wider transition-transform active:scale-95 flex items-center justify-center gap-2 shadow-lg border-2 border-current bg-transparent hover:bg-black/10`}
+              >
+                <Brain size={18} /> Quiz
+              </button>
+            </div>
+          </Card>
+        ))}
+      </div>
+    </div>
+  );
 
-            <h1>Book 2: The Neurochemical Hijack</h1>
-            <p>Your brain is not your enemy; it is ultra-efficient at survival. When you experience chronic trauma, your priority shifts from thriving to staying alive. This shift physically changes your blood chemistry and neural pathways.</p>
-            
-            <h2>The Polyvagal Ladder</h2>
-            <p>Recovery requires understanding the Autonomic Nervous System (ANS):</p>
-            <ul>
-                <li><strong>Ventral Vagal (Safety):</strong> Social engagement, steady heart rate, and connection.</li>
-                <li><strong>Sympathetic (Fight/Flight):</strong> Mobilization, adrenaline spikes, and anxiety.</li>
-                <li><strong>Dorsal Vagal (Freeze):</strong> Shutdown, numbness, and dissociation.</li>
-            </ul>
+  const LearnScreen = () => {
+    const word = activeCategory.words[currentIndex];
+    
+    return (
+      <div className="h-full flex flex-col max-w-md mx-auto animate-in zoom-in-95 duration-300">
+        <div className="mb-6 flex items-center justify-between bg-white p-2 rounded-xl shadow-sm border border-slate-200">
+          <button onClick={() => setView('home')} className="p-2 hover:bg-slate-100 rounded-lg transition-colors">
+            <X className="text-black" size={24} />
+          </button>
+          <div className="flex-1 mx-4">
+             <ProgressBar 
+                current={currentIndex + 1} 
+                total={activeCategory.words.length} 
+                activeCategory={activeCategory}
+             />
+          </div>
+          <div className="font-black text-sm">{currentIndex + 1}/{activeCategory.words.length}</div>
+        </div>
 
-            <h2>The Architecture of Trauma</h2>
-            <p><strong>The Amygdala:</strong> In trauma, the brain's "Smoke Detector" is enlarged and hyper-sensitive. It screams "FIRE!" at the smell of burnt toast.</p>
-            <p><strong>The Prefrontal Cortex:</strong> The "Pilot" handles logic. During a trigger, the Amygdala cuts the wires to the Pilot, leaving you unable to think logically.</p>
-            <p><strong>The Hippocampus:</strong> The "Librarian" fails to "date stamp" memories, making 20-year-old trauma feel like it is happening right now.</p>
-            <p><strong>Chemical Soup:</strong> Chronic levels of Cortisol cause inflammation and memory loss, while Adrenaline leads to "wired but tired" exhaustion.</p>
+        <div className="flex-1 flex flex-col justify-center perspective-1000 mb-8">
+          <div 
+            className="relative h-96 w-full cursor-pointer group"
+            onClick={() => setIsFlipped(!isFlipped)}
+          >
+            <div className={`absolute inset-0 w-full h-full transition-all duration-500 preserve-3d ${isFlipped ? 'rotate-y-180' : ''}`}>
+              
+              {/* Front */}
+              <div className={`absolute inset-0 backface-hidden bg-white rounded-3xl shadow-2xl border-4 ${activeCategory.borderColor} flex flex-col items-center justify-center p-6`}>
+                <div className={`mb-6 p-4 rounded-full ${activeCategory.bgColor} ${activeCategory.textColor} bg-opacity-20`}>
+                   {activeCategory.icon}
+                </div>
+                <h2 className="text-4xl font-black text-black mb-2 text-center leading-tight">{word.target}</h2>
+                <div className="mt-4 px-6 py-2 bg-slate-100 rounded-lg border-2 border-slate-200 text-slate-600 text-sm font-bold font-mono tracking-wide">
+                   /{word.pronunciation}/
+                </div>
+                
+                <button 
+                  onClick={(e) => { 
+                    e.stopPropagation(); 
+                    playAudio(word.pronunciation);
+                  }}
+                  className={`mt-8 p-4 rounded-full shadow-lg transition-transform active:scale-90 ${activeCategory.buttonColor}`}
+                  title="Play Pronunciation"
+                >
+                  <Volume2 size={32} />
+                </button>
+                <p className="absolute bottom-6 text-slate-400 text-xs font-black uppercase tracking-widest">Tap card to see meaning</p>
+              </div>
 
-            <h1>Book 3: Reclaiming Your Life</h1>
-            <p>Healing is not the absence of trauma; it is the presence of Safety. Because the thinking brain shuts down during a trigger, healing must happen from the "bottom-up"—starting with the body.</p>
+              {/* Back */}
+              <div className={`absolute inset-0 backface-hidden rotate-y-180 rounded-3xl shadow-2xl border-4 flex flex-col items-center justify-center p-8 ${activeCategory.bgColor} ${activeCategory.textColor} ${activeCategory.borderColor}`}>
+                <h3 className="text-sm font-black uppercase tracking-widest opacity-70 mb-6 border-b-2 border-current pb-1">English Translation</h3>
+                <h2 className="text-4xl font-black mb-8 text-center leading-tight">{word.native}</h2>
+                <RotateCcw size={40} className="opacity-50 animate-pulse" />
+              </div>
+            </div>
+          </div>
+        </div>
 
-            <h2>Daily Integration Tools</h2>
-            <p><strong>Paced Breathing (TIPP):</strong> Splashing ice-cold water on your face triggers the "Mammalian Dive Reflex," which instantly reboots a panicked brain.</p>
-            <p><strong>Grounding (5-4-3-2-1):</strong> Anchoring yourself in the present by engaging all five senses manually.</p>
-            <p><strong>Sacred Communication:</strong> Instead of shame-based labels, use survival language. Script: "My nervous system is feeling Sympathetic right now. I need 15 minutes of quiet to find safety. It's not about you; it's about my system."</p>
+        <div className="mt-auto">
+          <button 
+            onClick={handleNext}
+            className={`w-full font-black text-lg uppercase tracking-widest py-5 rounded-2xl shadow-xl active:scale-[0.98] transition-all flex items-center justify-center gap-3 border-2 ${activeCategory.bgColor} ${activeCategory.textColor} ${activeCategory.id === 'north' ? 'border-black' : 'border-transparent'}`}
+          >
+            {currentIndex === activeCategory.words.length - 1 ? 'Finish' : 'Next Word'} <ChevronRight size={24} />
+          </button>
+        </div>
+      </div>
+    );
+  };
 
-            <h2>Post-Traumatic Growth</h2>
-            <p>Survivors often develop "Superpowers": high empathy, the ability to read environments, and incredible resilience. Healing is becoming the integrated, wise, and powerful version of yourself forged in the fire of survival.</p>
-            <p><em>This series is dedicated with love to Jordan Lynn Stewart.</em></p>
-        `;
+  const QuizScreen = () => {
+    const word = activeCategory.words[currentIndex];
+    
+    const options = React.useMemo(() => {
+      const others = activeCategory.words.filter(w => w.id !== word.id);
+      const shuffledOthers = others.sort(() => 0.5 - Math.random()).slice(0, 2);
+      return [word, ...shuffledOthers].sort(() => 0.5 - Math.random());
+    }, [word, activeCategory]);
 
-        // Logic Implementation
-        let isReading = false;
-        const synth = window.speechSynthesis;
+    return (
+      <div className="h-full flex flex-col max-w-md mx-auto animate-in slide-in-from-right-8 duration-300">
+         <div className="mb-8 flex items-center justify-between bg-white p-3 rounded-xl border border-slate-200">
+          <button onClick={() => setView('home')} className="text-slate-500 font-black text-xs uppercase hover:text-black tracking-wider flex items-center gap-1">
+             <X size={16} /> Quit
+          </button>
+          <div className="flex-1 mx-4">
+            <ProgressBar 
+                current={currentIndex} 
+                total={activeCategory.words.length} 
+                activeCategory={activeCategory}
+             />
+          </div>
+          <span className={`font-black text-sm`}>{currentIndex + 1}/{activeCategory.words.length}</span>
+        </div>
 
-        function init() {
-            renderSigns();
-            renderResources();
-            initCharts();
-            synth.getVoices();
-        }
+        <div className="flex-1">
+          <div className="bg-white p-8 rounded-3xl shadow-lg border-2 border-slate-100 mb-8 text-center">
+            <h2 className="text-lg font-bold text-slate-500 uppercase tracking-wide mb-4">
+                How do you say?
+            </h2>
+            <div className={`text-4xl font-black ${activeCategory.id === 'north' ? 'text-black' : activeCategory.id === 'west' ? 'text-black' : activeCategory.id === 'east' ? 'text-yellow-600' : 'text-red-600'}`}>
+                {word.native}
+            </div>
+          </div>
 
-        function switchView(viewId) {
-            document.querySelectorAll('#scroll-area > div').forEach(v => v.classList.add('hidden'));
-            document.querySelectorAll('nav button').forEach(b => b.classList.remove('active-tab'));
-            
-            document.getElementById(`view-${viewId}`).classList.remove('hidden');
-            document.getElementById(`nav-${viewId}`).classList.add('active-tab');
-            
-            const titles = { dashboard: "Series Dashboard", dedication: "The Heart of the Project", identify: "Identify (East)", biology: "Biology (South)", heal: "Integrate (West)", resources: "Support (North)" };
-            document.getElementById('view-title').textContent = titles[viewId];
-            document.getElementById('scroll-area').scrollTop = 0;
-        }
+          <div className="space-y-4">
+            {options.map((opt) => (
+              <button
+                key={opt.id}
+                onClick={() => handleQuizAnswer(opt.id === word.id)}
+                className={`w-full bg-white border-4 border-slate-200 hover:border-black p-6 rounded-2xl transition-all duration-150 group flex items-center justify-between text-left hover:shadow-xl hover:scale-[1.02] active:scale-95`}
+              >
+                <span className="text-xl font-bold text-slate-800 group-hover:text-black">{opt.target}</span>
+                <div className={`w-6 h-6 rounded-full border-2 border-slate-300 group-hover:${activeCategory.bgColor}`} />
+              </button>
+            ))}
+          </div>
+        </div>
+      </div>
+    );
+  };
 
-        function renderSigns() {
-            const grid = document.getElementById('signs-grid');
-            signs.forEach(s => {
-                const card = document.createElement('div');
-                card.className = "sign-card p-10 rounded-[3rem] border border-slate-200 group flex flex-col items-start text-left";
-                card.innerHTML = `
-                    <div class="w-16 h-16 rounded-3xl bg-yellow-50 text-yellow-600 flex items-center justify-center mb-8 shadow-inner transition-transform group-hover:scale-110">
-                        <i class="fa-solid ${s.icon} text-2xl"></i>
-                    </div>
-                    <h4 class="font-black mb-4 text-slate-900 text-xl tracking-tight">${s.title}</h4>
-                    <p class="text-sm text-slate-600 font-bold leading-relaxed mb-6 flex-grow">${s.scenario}</p>
-                    <div class="hidden group-hover:block animate-fade-in pt-6 border-t border-yellow-100 w-full">
-                        <p class="text-xs text-yellow-700 font-black uppercase tracking-[0.1em] mb-2">Survival Strategy:</p>
-                        <p class="text-sm text-yellow-900 font-bold leading-tight">${s.logic}</p>
-                    </div>
-                `;
-                grid.appendChild(card);
-            });
-        }
+  const ResultScreen = () => {
+    const percentage = Math.round((quizScore / activeCategory.words.length) * 100);
+    const isSuccess = percentage >= 70;
 
-        function renderResources() {
-            const list = document.getElementById('resource-list');
-            resources.forEach(r => {
-                list.innerHTML += `
-                    <div class="bg-white p-10 rounded-[2.5rem] border border-slate-100 flex justify-between items-center shadow-xl transition-all hover:scale-[1.03] text-left">
-                        <div>
-                            <div class="font-black text-slate-950 text-xl tracking-tight">${r.name}</div>
-                            <div class="text-xs text-indigo-600 font-black uppercase tracking-[0.2em] mt-3">${r.note}</div>
-                        </div>
-                        <div class="text-2xl font-black text-slate-900 bg-slate-50 px-6 py-3 rounded-2xl border border-slate-100">${r.contact}</div>
-                    </div>
-                `;
-            });
-        }
+    useEffect(() => {
+        if(isSuccess) setXp(prev => prev + 100);
+    }, []);
 
-        function initCharts() {
-            new Chart(document.getElementById('mainRadarChart').getContext('2d'), {
-                type: 'radar',
-                data: {
-                    labels: ['Flashbacks', 'Hypervigilance', 'Regulation', 'Self-Concept', 'Trust', 'Dissociation'],
-                    datasets: [
-                        { label: 'PTSD Profile', data: [95, 90, 50, 40, 50, 60], backgroundColor: 'rgba(239, 68, 68, 0.2)', borderColor: 'rgb(239, 68, 68)', pointBackgroundColor: 'rgb(239, 68, 68)', borderWidth: 4 },
-                        { label: 'CPTSD Profile', data: [60, 80, 95, 100, 95, 90], backgroundColor: 'rgba(234, 179, 8, 0.2)', borderColor: 'rgb(234, 179, 8)', pointBackgroundColor: 'rgb(234, 179, 8)', borderWidth: 4 }
-                    ]
-                },
-                options: { maintainAspectRatio: false, scales: { r: { angleLines: { color: 'rgba(0,0,0,0.1)' }, grid: { color: 'rgba(0,0,0,0.1)' }, ticks: { display: false }, pointLabels: { font: { weight: 'bold', family: 'Inter', size: 11 } } } }, plugins: { legend: { position: 'bottom', labels: { font: { family: 'Inter', weight: '900', size: 12 }, padding: 30 } } } }
-            });
+    return (
+      <div className="h-full flex flex-col items-center justify-center text-center max-w-md mx-auto animate-in zoom-in-95 duration-500 bg-white p-6 rounded-3xl border-4 border-black">
+        <div className={`w-32 h-32 rounded-full flex items-center justify-center mb-8 border-4 border-black ${isSuccess ? 'bg-yellow-400 text-black' : 'bg-slate-200 text-slate-500'}`}>
+          {isSuccess ? <Trophy size={64} /> : <Brain size={64} />}
+        </div>
+        
+        <h2 className="text-4xl font-black text-black mb-2 uppercase tracking-tighter">
+          {isSuccess ? 'Success!' : 'Keep Going!'}
+        </h2>
+        
+        <p className="text-slate-600 font-medium mb-10 max-w-xs leading-relaxed">
+          {isSuccess 
+            ? `You have honored the ${activeCategory.title} direction.` 
+            : `You got ${quizScore} out of ${activeCategory.words.length} correct. Return to the circle and try again.`}
+        </p>
 
-            new Chart(document.getElementById('polyvagalBarChart').getContext('2d'), {
-                type: 'bar',
-                data: {
-                    labels: ['Ventral (Safe)', 'Sympathetic (Alert)', 'Dorsal (Freeze)'],
-                    datasets: [
-                        { label: 'Energy Potential', data: [50, 100, 20], backgroundColor: ['#4ade80', '#ef4444', '#1e293b'], borderRadius: 12 },
-                        { label: 'Sense of Safety', data: [100, 20, 5], backgroundColor: ['#166534', '#991b1b', '#0f172a'], borderRadius: 12 }
-                    ]
-                },
-                options: { maintainAspectRatio: false, scales: { y: { beginAtZero: true, display: false }, x: { grid: { display: false }, border: { display: false }, ticks: { font: { weight: 'bold', size: 12 } } } }, plugins: { legend: { position: 'bottom', labels: { font: { family: 'Inter', weight: '900' }, padding: 25 } } } }
-            });
-        }
+        <div className="grid grid-cols-2 gap-4 w-full mb-10">
+          <div className="bg-black p-4 rounded-xl text-white">
+            <div className="text-xs text-slate-400 font-black uppercase mb-1 tracking-widest">Score</div>
+            <div className="text-3xl font-black text-white">{percentage}%</div>
+          </div>
+          <div className="bg-yellow-400 p-4 rounded-xl border-2 border-black">
+             <div className="text-xs text-black font-black uppercase mb-1 tracking-widest">XP Earned</div>
+            <div className="text-3xl font-black text-black">+{isSuccess ? 100 : 25}</div>
+          </div>
+        </div>
 
-        function toggleReader() {
-            const modal = document.getElementById('reader-modal');
-            const display = document.getElementById('reader-content');
-            if (modal.classList.contains('hidden')) {
-                display.innerHTML = fullBookText;
-                modal.classList.remove('hidden');
-                document.body.style.overflow = 'hidden';
-            } else {
-                stopTTS();
-                modal.classList.add('hidden');
-                document.body.style.overflow = '';
-            }
-        }
+        <button 
+          onClick={() => setView('home')}
+          className="w-full bg-red-600 hover:bg-red-700 text-white font-black uppercase tracking-widest py-5 rounded-xl shadow-xl border-4 border-red-800 transition-all active:scale-[0.98]"
+        >
+          Return to Circle
+        </button>
+      </div>
+    );
+  };
 
-        function downloadFullCollection() {
-            const content = document.getElementById('reader-content').innerText;
-            const title = "TRAUMA COMPASS: THE COMPLETE COLLECTION\nDedicated to Jordan Lynn Stewart\n\n";
-            const fullDoc = title + content;
-            const blob = new Blob([fullDoc], { type: 'text/markdown' });
-            const url = URL.createObjectURL(blob);
-            const a = document.createElement('a');
-            a.href = url;
-            a.download = "Trauma_Compass_Series.md";
-            document.body.appendChild(a);
-            a.click();
-            document.body.removeChild(a);
-            URL.revokeObjectURL(url);
-            showToast("Complete series downloaded successfully.");
-        }
+  // --- Main Layout ---
 
-        function toggleTTS() {
-            if (isReading) {
-                stopTTS();
-                return;
-            }
-            const text = document.getElementById('reader-content').innerText.trim();
-            if (!text) return;
-            isReading = true;
-            document.getElementById('tts-indicator').classList.remove('hidden');
-            const btn = document.getElementById('tts-btn');
-            btn.innerHTML = '<i class="fa-solid fa-stop"></i> <span>Stop Voice</span>';
-            btn.classList.add('bg-red-600', 'hover:bg-red-700');
+  return (
+    <div className="min-h-screen bg-slate-200 text-slate-900 font-sans selection:bg-black selection:text-white">
+      <div className="max-w-md mx-auto min-h-screen bg-white shadow-2xl overflow-hidden flex flex-col relative border-x-4 border-slate-300">
+        
+        {/* Main Content Area */}
+        <main className="flex-1 p-6 overflow-y-auto custom-scrollbar relative bg-slate-50">
+          {view === 'home' && <HomeScreen />}
+          {view === 'learn' && <LearnScreen />}
+          {view === 'quiz' && <QuizScreen />}
+          {view === 'result' && <ResultScreen />}
+        </main>
 
-            const paragraphs = text.split(/\n+/);
-            const speakNext = (index) => {
-                if (!isReading || index >= paragraphs.length) {
-                    stopTTS();
-                    return;
-                }
-                const utterance = new SpeechSynthesisUtterance(paragraphs[index]);
-                const voices = synth.getVoices();
-                const preferredVoice = voices.find(v => v.name.includes('Premium') || v.name.includes('Natural') || v.name.includes('Google US English'));
-                if (preferredVoice) utterance.voice = preferredVoice;
-                utterance.rate = 0.95; 
-                utterance.pitch = 1.05;
-                utterance.onend = () => speakNext(index + 1);
-                utterance.onerror = () => stopTTS();
-                synth.speak(utterance);
-            };
-            speakNext(0);
-        }
-
-        function stopTTS() {
-            isReading = false;
-            synth.cancel();
-            document.getElementById('tts-indicator').classList.add('hidden');
-            const btn = document.getElementById('tts-btn');
-            btn.innerHTML = '<i class="fa-solid fa-volume-high"></i> <span>Listen to Collection</span>';
-            btn.classList.remove('bg-red-600', 'hover:bg-red-700');
-            btn.classList.add('bg-indigo-600', 'hover:bg-indigo-700');
-        }
-
-        function showToast(msg) {
-            const toast = document.getElementById('toast');
-            const toastMsg = document.getElementById('toast-msg');
-            toastMsg.textContent = msg;
-            toast.classList.remove('hidden');
-            setTimeout(() => toast.classList.add('hidden'), 5000);
-        }
-
-        window.onload = init;
-        if (speechSynthesis.onvoiceschanged !== undefined) {
-            speechSynthesis.onvoiceschanged = () => synth.getVoices();
-        }
-    </script>
+        {/* Bottom Navigation (Only on Home) */}
+        {view === 'home' && (
+          <nav className="border-t-4 border-slate-200 bg-white px-6 py-4 flex justify-between items-center z-30">
+            <button className="flex flex-col items-center gap-1 text-black transition-transform hover:scale-110">
+              <Home size={28} />
+              <span className="text-[10px] font-black uppercase tracking-wider">Home</span>
+            </button>
+            <button className="flex flex-col items-center gap-1 text-slate-400 hover:text-black transition-all hover:scale-110">
+              <Star size={28} />
+              <span className="text-[10px] font-black uppercase tracking-wider">Rank</span>
+            </button>
+            <button className="flex flex-col items-center gap-1 text-slate-400 hover:text-black transition-all hover:scale-110">
+              <Users size={28} />
+              <span className="text-[10px] font-black uppercase tracking-wider">Tribe</span>
+            </button>
+          </nav>
+        )}
+      </div>
+      
+      {/* CSS Utility for 3D flip effect */}
+      <style>{`
+        .perspective-1000 { perspective: 1000px; }
+        .transform-style-3d { transform-style: preserve-3d; }
+        .backface-hidden { backface-visibility: hidden; }
+        .rotate-y-180 { transform: rotateY(180deg); }
+        .preserve-3d { transform-style: preserve-3d; }
+      `}</style>
+    </div>
+  );
+}
