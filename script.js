@@ -1,4 +1,5 @@
-<script>
+ <script>
+        // Data Structure
         const signs = [
             { title: "Over-explaining", icon: "fa-comments", scenario: "Spending 20 mins drafting a basic email.", logic: "Preemptively soothing others to stay safe from unpredictable moods." },
             { title: "Preemptive Self-Attack", icon: "fa-shield-halved", scenario: "Calling yourself 'stupid' before anyone else can.", logic: "Controlling the pain of criticism by inflicting it yourself first." },
@@ -76,18 +77,17 @@
 
             <h2>Post-Traumatic Growth</h2>
             <p>Survivors often develop "Superpowers": high empathy, the ability to read environments, and incredible resilience. Healing is becoming the integrated, wise, and powerful version of yourself forged in the fire of survival.</p>
-            <p><em>Dedicated to Jordan Lynn Stewart.</em></p>
+            <p><em>This series is dedicated with love to Jordan Lynn Stewart.</em></p>
         `;
 
+        // Logic Implementation
         let isReading = false;
         const synth = window.speechSynthesis;
-        let speechQueue = [];
 
         function init() {
             renderSigns();
             renderResources();
             initCharts();
-            // Pre-warm voices
             synth.getVoices();
         }
 
@@ -98,25 +98,8 @@
             document.getElementById(`view-${viewId}`).classList.remove('hidden');
             document.getElementById(`nav-${viewId}`).classList.add('active-tab');
             
-            const titles = { 
-                dashboard: "Series Dashboard", 
-                dedication: "The Heart of the Project",
-                identify: "Identify (East)", 
-                biology: "Biology (South)", 
-                heal: "Healing (West)", 
-                resources: "Resources (North)" 
-            };
-            const descs = {
-                dashboard: "Your roadmap from trauma to integrated healing.",
-                dedication: "Honoring the advocacy of Jordan Lynn Stewart.",
-                identify: "Recognizing the physical and behavioral manifestations of trauma.",
-                biology: "How the brain and nervous system adapt to survive.",
-                heal: "Daily tools and strategies for retraining the survival alarm.",
-                resources: "Safe harbor and emergency assistance contacts."
-            };
-            
+            const titles = { dashboard: "Series Dashboard", dedication: "The Heart of the Project", identify: "Identify (East)", biology: "Biology (South)", heal: "Integrate (West)", resources: "Support (North)" };
             document.getElementById('view-title').textContent = titles[viewId];
-            document.getElementById('view-desc').textContent = descs[viewId];
             document.getElementById('scroll-area').scrollTop = 0;
         }
 
@@ -124,8 +107,18 @@
             const grid = document.getElementById('signs-grid');
             signs.forEach(s => {
                 const card = document.createElement('div');
-                card.className = "bg-white p-6 rounded-3xl border border-slate-200 sign-card group shadow-sm";
-                card.innerHTML = `<div class="w-10 h-10 rounded-xl bg-yellow-50 text-yellow-600 flex items-center justify-center mb-4 shadow-inner"><i class="fa-solid ${s.icon}"></i></div><h4 class="font-bold mb-2 text-slate-800">${s.title}</h4><p class="text-xs text-slate-500 hidden group-hover:block transition-all duration-300 leading-relaxed"><strong>Logic:</strong> ${s.logic}</p>`;
+                card.className = "sign-card p-10 rounded-[3rem] border border-slate-200 group flex flex-col items-start text-left";
+                card.innerHTML = `
+                    <div class="w-16 h-16 rounded-3xl bg-yellow-50 text-yellow-600 flex items-center justify-center mb-8 shadow-inner transition-transform group-hover:scale-110">
+                        <i class="fa-solid ${s.icon} text-2xl"></i>
+                    </div>
+                    <h4 class="font-black mb-4 text-slate-900 text-xl tracking-tight">${s.title}</h4>
+                    <p class="text-sm text-slate-600 font-bold leading-relaxed mb-6 flex-grow">${s.scenario}</p>
+                    <div class="hidden group-hover:block animate-fade-in pt-6 border-t border-yellow-100 w-full">
+                        <p class="text-xs text-yellow-700 font-black uppercase tracking-[0.1em] mb-2">Survival Strategy:</p>
+                        <p class="text-sm text-yellow-900 font-bold leading-tight">${s.logic}</p>
+                    </div>
+                `;
                 grid.appendChild(card);
             });
         }
@@ -133,7 +126,15 @@
         function renderResources() {
             const list = document.getElementById('resource-list');
             resources.forEach(r => {
-                list.innerHTML += `<div class="bg-white p-6 rounded-2xl border border-slate-200 flex justify-between items-center shadow-sm"><div><div class="font-bold text-slate-900">${r.name}</div><div class="text-xs text-slate-400 font-bold uppercase tracking-widest mt-1">${r.note}</div></div><div class="text-lg font-black text-indigo-600">${r.contact}</div></div>`;
+                list.innerHTML += `
+                    <div class="bg-white p-10 rounded-[2.5rem] border border-slate-100 flex justify-between items-center shadow-xl transition-all hover:scale-[1.03] text-left">
+                        <div>
+                            <div class="font-black text-slate-950 text-xl tracking-tight">${r.name}</div>
+                            <div class="text-xs text-indigo-600 font-black uppercase tracking-[0.2em] mt-3">${r.note}</div>
+                        </div>
+                        <div class="text-2xl font-black text-slate-900 bg-slate-50 px-6 py-3 rounded-2xl border border-slate-100">${r.contact}</div>
+                    </div>
+                `;
             });
         }
 
@@ -141,25 +142,25 @@
             new Chart(document.getElementById('mainRadarChart').getContext('2d'), {
                 type: 'radar',
                 data: {
-                    labels: ['Flashbacks', 'Hypervigilance', 'Emotional Regulation', 'Self-Concept', 'Relationship Trust', 'Dissociation'],
+                    labels: ['Flashbacks', 'Hypervigilance', 'Regulation', 'Self-Concept', 'Trust', 'Dissociation'],
                     datasets: [
-                        { label: 'PTSD Focus', data: [90, 85, 40, 30, 40, 50], backgroundColor: 'rgba(239, 68, 68, 0.2)', borderColor: 'rgb(239, 68, 68)', pointBackgroundColor: 'rgb(239, 68, 68)' },
-                        { label: 'CPTSD Focus', data: [50, 70, 95, 95, 90, 80], backgroundColor: 'rgba(234, 179, 8, 0.2)', borderColor: 'rgb(234, 179, 8)', pointBackgroundColor: 'rgb(234, 179, 8)' }
+                        { label: 'PTSD Profile', data: [95, 90, 50, 40, 50, 60], backgroundColor: 'rgba(239, 68, 68, 0.2)', borderColor: 'rgb(239, 68, 68)', pointBackgroundColor: 'rgb(239, 68, 68)', borderWidth: 4 },
+                        { label: 'CPTSD Profile', data: [60, 80, 95, 100, 95, 90], backgroundColor: 'rgba(234, 179, 8, 0.2)', borderColor: 'rgb(234, 179, 8)', pointBackgroundColor: 'rgb(234, 179, 8)', borderWidth: 4 }
                     ]
                 },
-                options: { maintainAspectRatio: false, scales: { r: { angleLines: { color: '#e2e8f0' }, grid: { color: '#e2e8f0' }, ticks: { display: false } } }, plugins: { legend: { labels: { font: { family: 'Inter', weight: 'bold' } } } } }
+                options: { maintainAspectRatio: false, scales: { r: { angleLines: { color: 'rgba(0,0,0,0.1)' }, grid: { color: 'rgba(0,0,0,0.1)' }, ticks: { display: false }, pointLabels: { font: { weight: 'bold', family: 'Inter', size: 11 } } } }, plugins: { legend: { position: 'bottom', labels: { font: { family: 'Inter', weight: '900', size: 12 }, padding: 30 } } } }
             });
 
             new Chart(document.getElementById('polyvagalBarChart').getContext('2d'), {
                 type: 'bar',
                 data: {
-                    labels: ['Ventral Vagal (Safety)', 'Sympathetic (Fight/Flight)', 'Dorsal Vagal (Freeze)'],
+                    labels: ['Ventral (Safe)', 'Sympathetic (Alert)', 'Dorsal (Freeze)'],
                     datasets: [
-                        { label: 'Energy Level', data: [40, 95, 10], backgroundColor: ['#4ade80', '#ef4444', '#1e293b'], borderRadius: 4 },
-                        { label: 'Safety Sense', data: [95, 10, 5], backgroundColor: ['#166534', '#991b1b', '#0f172a'], borderRadius: 4 }
+                        { label: 'Energy Potential', data: [50, 100, 20], backgroundColor: ['#4ade80', '#ef4444', '#1e293b'], borderRadius: 12 },
+                        { label: 'Sense of Safety', data: [100, 20, 5], backgroundColor: ['#166534', '#991b1b', '#0f172a'], borderRadius: 12 }
                     ]
                 },
-                options: { maintainAspectRatio: false, scales: { y: { beginAtZero: true, display: false }, x: { grid: { display: false }, border: { display: false } } }, plugins: { legend: { position: 'bottom', labels: { font: { family: 'Inter', weight: 'bold' } } } } }
+                options: { maintainAspectRatio: false, scales: { y: { beginAtZero: true, display: false }, x: { grid: { display: false }, border: { display: false }, ticks: { font: { weight: 'bold', size: 12 } } } }, plugins: { legend: { position: 'bottom', labels: { font: { family: 'Inter', weight: '900' }, padding: 25 } } } }
             });
         }
 
@@ -169,74 +170,59 @@
             if (modal.classList.contains('hidden')) {
                 display.innerHTML = fullBookText;
                 modal.classList.remove('hidden');
+                document.body.style.overflow = 'hidden';
             } else {
                 stopTTS();
                 modal.classList.add('hidden');
+                document.body.style.overflow = '';
             }
         }
 
         function downloadFullCollection() {
             const content = document.getElementById('reader-content').innerText;
-            const title = "Trauma Compass: The Complete Collection\nDedicated to Jordan Lynn Stewart\n\n";
+            const title = "TRAUMA COMPASS: THE COMPLETE COLLECTION\nDedicated to Jordan Lynn Stewart\n\n";
             const fullDoc = title + content;
             const blob = new Blob([fullDoc], { type: 'text/markdown' });
             const url = URL.createObjectURL(blob);
             const a = document.createElement('a');
             a.href = url;
-            a.download = "Trauma_Compass_Complete_Collection.md";
+            a.download = "Trauma_Compass_Series.md";
             document.body.appendChild(a);
             a.click();
             document.body.removeChild(a);
             URL.revokeObjectURL(url);
-            showToast("Collection downloaded successfully.");
+            showToast("Complete series downloaded successfully.");
         }
-
-        // --- NATIVE BROWSER TTS ENGINE ---
 
         function toggleTTS() {
             if (isReading) {
                 stopTTS();
                 return;
             }
-
             const text = document.getElementById('reader-content').innerText.trim();
             if (!text) return;
-
             isReading = true;
             document.getElementById('tts-indicator').classList.remove('hidden');
             const btn = document.getElementById('tts-btn');
-            btn.innerHTML = '<i class="fa-solid fa-stop"></i> Stop';
-            btn.classList.add('bg-red-500');
+            btn.innerHTML = '<i class="fa-solid fa-stop"></i> <span>Stop Voice</span>';
+            btn.classList.add('bg-red-600', 'hover:bg-red-700');
 
-            // Split into paragraphs for better stability
             const paragraphs = text.split(/\n+/);
-            
             const speakNext = (index) => {
                 if (!isReading || index >= paragraphs.length) {
                     stopTTS();
                     return;
                 }
-
                 const utterance = new SpeechSynthesisUtterance(paragraphs[index]);
-                
-                // Try to find a nice voice
                 const voices = synth.getVoices();
-                // Prefer Google or Microsoft "Natural" or premium voices if available
                 const preferredVoice = voices.find(v => v.name.includes('Premium') || v.name.includes('Natural') || v.name.includes('Google US English'));
                 if (preferredVoice) utterance.voice = preferredVoice;
-                
-                utterance.rate = 0.95; // Slightly slower for empathy
-                utterance.pitch = 1;
-
+                utterance.rate = 0.95; 
+                utterance.pitch = 1.05;
                 utterance.onend = () => speakNext(index + 1);
-                utterance.onerror = (e) => {
-                    console.error('Speech error:', e);
-                    stopTTS();
-                };
-
+                utterance.onerror = () => stopTTS();
                 synth.speak(utterance);
             };
-
             speakNext(0);
         }
 
@@ -245,8 +231,9 @@
             synth.cancel();
             document.getElementById('tts-indicator').classList.add('hidden');
             const btn = document.getElementById('tts-btn');
-            btn.innerHTML = '<i class="fa-solid fa-volume-high"></i> Listen';
-            btn.classList.remove('bg-red-500');
+            btn.innerHTML = '<i class="fa-solid fa-volume-high"></i> <span>Listen to Collection</span>';
+            btn.classList.remove('bg-red-600', 'hover:bg-red-700');
+            btn.classList.add('bg-indigo-600', 'hover:bg-indigo-700');
         }
 
         function showToast(msg) {
@@ -258,7 +245,6 @@
         }
 
         window.onload = init;
-        // Required for Chrome to load voices
         if (speechSynthesis.onvoiceschanged !== undefined) {
             speechSynthesis.onvoiceschanged = () => synth.getVoices();
         }
