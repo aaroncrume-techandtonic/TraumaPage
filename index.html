@@ -467,21 +467,28 @@
                 try {
                     const response = await fetch(url, options);
                     if (response.ok) return response;
-                    if (response.status !== 429 && response.status < 500) break;
-                } catch (e) {}
+                    // If it's a transient server error or rate limit, retry. Otherwise, throw.
+                    if (response.status !== 429 && response.status < 500) {
+                        const errBody = await response.json().catch(() => ({}));
+                        throw new Error(errBody.error?.message || `API Error ${response.status}`);
+                    }
+                } catch (e) {
+                    if (i === maxRetries - 1) throw e;
+                }
                 await new Promise(r => setTimeout(r, delay));
                 delay *= 2;
             }
-            throw new Error("API Connection Failed");
+            throw new Error("Service connection failed");
         }
 
         function splitTextIntoChunks(text, limit = 1500) {
             const chunks = [];
             let current = "";
+            // Split by sentence to keep speech natural
             const sentences = text.match(/[^\.!\?]+[\.!\?]+/g) || [text];
             for (const s of sentences) {
                 if ((current + s).length > limit) {
-                    chunks.push(current.trim());
+                    if (current) chunks.push(current.trim());
                     current = s;
                 } else {
                     current += s;
@@ -507,27 +514,38 @@
             btn.classList.add('bg-red-500');
 
             try {
+                // Ensure AudioContext is active on user gesture
                 if (!audioContext) audioContext = new (window.AudioContext || window.webkitAudioContext)();
                 if (audioContext.state === 'suspended') await audioContext.resume();
 
                 const chunks = splitTextIntoChunks(text);
+                loader.classList.add('hidden'); // Hide loader once chunking is done and we start requests
+
                 for (const chunk of chunks) {
                     if (!isReading) break;
                     await speakChunk(chunk);
                 }
             } catch (e) {
-                showToast("Audio service unavailable. Please try again.");
+                console.error("TTS Failure:", e);
+                showToast(e.message || "Audio service unavailable. Please try again.");
                 stopTTS();
             } finally {
                 loader.classList.add('hidden');
+                if (isReading) {
+                    // Check if we finished all chunks
+                    const currentText = document.getElementById('reader-content').innerText.trim();
+                    if (!currentSource && isReading) stopTTS();
+                }
             }
         }
 
         async function speakChunk(chunkText) {
-            const res = await fetchWithRetry(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-tts:generateContent?key=${apiKey}`, {
-                method: "POST", headers: { "Content-Type": "application/json" },
+            const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-tts:generateContent?key=${apiKey}`;
+            const res = await fetchWithRetry(url, {
+                method: "POST", 
+                headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({
-                    contents: [{ parts: [{ text: `Read with empathy: ${chunkText}` }] }],
+                    contents: [{ parts: [{ text: `Read with empathy and clarity: ${chunkText}` }] }],
                     generationConfig: { 
                         responseModalities: ["AUDIO"], 
                         speechConfig: { voiceConfig: { prebuiltVoiceConfig: { voiceName: "Aoede" } } } 
@@ -535,39 +553,46 @@
                     model: "gemini-2.5-flash-preview-tts"
                 })
             });
-            const result = await res.json();
-            const candidate = result.candidates?.[0];
-            const pcmData = candidate?.content?.parts?.find(p => p.inlineData)?.inlineData;
             
-            if (!pcmData) throw new Error("No audio data");
+            const result = await res.json();
+            // The instructions specify audio data is in candidates[0].content.parts[0].inlineData
+            const pcmPart = result.candidates?.[0]?.content?.parts?.[0]?.inlineData;
+            
+            if (!pcmPart || !pcmPart.data) throw new Error("Audio data not found in response");
 
-            const sampleRate = parseInt(pcmData.mimeType.split('rate=')[1]) || 24000;
-            await playAudioPromise(pcmData.data, sampleRate);
+            // Extract sample rate from mimeType (e.g., "audio/L16;rate=24000")
+            const sampleRate = parseInt(pcmPart.mimeType.split('rate=')[1]) || 24000;
+            await playAudioPromise(pcmPart.data, sampleRate);
         }
 
         function playAudioPromise(base64, sampleRate) {
             return new Promise((resolve, reject) => {
                 if (!isReading) return resolve();
-                const binary = atob(base64);
-                const bytes = new Uint8Array(binary.length);
-                for (let i = 0; i < binary.length; i++) bytes[i] = binary.charCodeAt(i);
                 
-                const wav = createWav(bytes, sampleRate);
-                
-                audioContext.decodeAudioData(wav, buffer => {
-                    if (!isReading) return resolve();
-                    currentSource = audioContext.createBufferSource();
-                    currentSource.buffer = buffer;
-                    currentSource.connect(audioContext.destination);
-                    currentSource.onended = () => {
-                        currentSource = null;
-                        resolve();
-                    };
-                    currentSource.start(0);
-                }, (err) => {
-                    console.error("Decode error:", err);
-                    reject(err);
-                });
+                try {
+                    const binary = atob(base64);
+                    const bytes = new Uint8Array(binary.length);
+                    for (let i = 0; i < binary.length; i++) bytes[i] = binary.charCodeAt(i);
+                    
+                    const wav = createWav(bytes, sampleRate);
+                    
+                    audioContext.decodeAudioData(wav, buffer => {
+                        if (!isReading) return resolve();
+                        currentSource = audioContext.createBufferSource();
+                        currentSource.buffer = buffer;
+                        currentSource.connect(audioContext.destination);
+                        currentSource.onended = () => {
+                            currentSource = null;
+                            resolve();
+                        };
+                        currentSource.start(0);
+                    }, (err) => {
+                        console.error("Audio Decode Error:", err);
+                        reject(new Error("Failed to decode audio data"));
+                    });
+                } catch (e) {
+                    reject(e);
+                }
             });
         }
 
@@ -588,9 +613,21 @@
             const buf = new ArrayBuffer(44 + pcm.length);
             const v = new DataView(buf);
             const s = (o, str) => { for (let i = 0; i < str.length; i++) v.setUint8(o + i, str.charCodeAt(i)); };
-            s(0, 'RIFF'); v.setUint32(4, 36 + pcm.length, true); s(8, 'WAVE'); s(12, 'fmt '); v.setUint32(16, 16, true);
-            v.setUint16(20, 1, true); v.setUint16(22, 1, true); v.setUint32(24, rate, true); v.setUint32(28, rate * 2, true);
-            v.setUint16(32, 2, true); v.setUint16(34, 16, true); s(36, 'data'); v.setUint32(40, pcm.length, true);
+            
+            s(0, 'RIFF'); 
+            v.setUint32(4, 36 + pcm.length, true); 
+            s(8, 'WAVE'); 
+            s(12, 'fmt '); 
+            v.setUint32(16, 16, true);
+            v.setUint16(20, 1, true); // PCM
+            v.setUint16(22, 1, true); // Mono
+            v.setUint32(24, rate, true); 
+            v.setUint32(28, rate * 2, true); // Byte rate
+            v.setUint16(32, 2, true); // Block align
+            v.setUint16(34, 16, true); // 16-bit
+            s(36, 'data'); 
+            v.setUint32(40, pcm.length, true);
+            
             for (let i = 0; i < pcm.length; i++) v.setUint8(44 + i, pcm[i]);
             return buf;
         }
