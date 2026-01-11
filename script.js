@@ -1,3 +1,7 @@
+<script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  
+  
   <script>
         // Choose Palette: Medicine Wheel Harmony
         // Application Structure Plan: A 4-quadrant interactive dashboard modeled after the Medicine Wheel + Dedicated Tribute Section. 
