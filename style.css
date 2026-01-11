@@ -1,49 +1,40 @@
-<style> @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+<style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+        
+        /* Chosen Palette: Medicine Wheel Harmony */
+        body { font-family: 'Inter', sans-serif; background-color: #F8FAFC; color: #1E293B; overflow: hidden; }
+        
+        .chart-container {
+            position: relative;
+            width: 100%;
+            max-width: 600px;
+            height: 350px;
+            max-height: 400px;
+            margin: 0 auto;
+        }
+        
+        .sign-card { transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); cursor: pointer; }
+        .sign-card:hover { transform: translateY(-4px); box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1); }
+        
+        .bg-east { background-color: #FEF3C7; }
+        .bg-south { background-color: #FEE2E2; }
+        .bg-west { background-color: #E2E8F0; }
+        .bg-north { background-color: #F9FAFB; }
 
-    body { font-family: 'Inter', sans-serif; background-color: #F8FAFC; color: #1E293B; }
-    
-    /* Custom Scrollbar */
-    ::-webkit-scrollbar { width: 8px; }
-    ::-webkit-scrollbar-track { background: #f1f1f1; }
-    ::-webkit-scrollbar-thumb { background: #94a3b8; border-radius: 4px; }
-    ::-webkit-scrollbar-thumb:hover { background: #64748b; }
+        @keyframes breathe {
+            0%, 100% { transform: scale(1); opacity: 0.8; }
+            50% { transform: scale(1.5); opacity: 0.4; }
+        }
+        .breathing-circle { animation: breathe 8s infinite ease-in-out; }
 
-    /* Chart Container Utilities */
-    .chart-container {
-        position: relative;
-        width: 100%;
-        max-width: 600px;
-        height: 350px;
-        max-height: 400px;
-        margin: 0 auto;
-    }
-    
-    /* Interactive Card Hover Effects */
-    .sign-card { transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); }
-    .sign-card:hover { transform: translateY(-4px); box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1); }
-    
-    /* Medicine Wheel Accents */
-    .border-east { border-color: #FBBF24; } /* Yellow */
-    .border-south { border-color: #EF4444; } /* Red */
-    .border-west { border-color: #1E293B; } /* Black/Dark Slate */
-    .border-north { border-color: #94A3B8; } /* White/Grey */
-    
-    .bg-east { background-color: #FEF3C7; color: #92400E; }
-    .bg-south { background-color: #FEE2E2; color: #991B1B; }
-    .bg-west { background-color: #E2E8F0; color: #1E293B; }
-    
-    /* Animation */
-    @keyframes breathe {
-        0%, 100% { transform: scale(1); opacity: 0.8; }
-        50% { transform: scale(1.5); opacity: 0.4; }
-    }
-    .breathing-circle {
-        animation: breathe 8s infinite ease-in-out;
-    }
-
-    /* Reader Overlay Transition */
-    .modal-enter { opacity: 0; transform: scale(0.95); }
-    .modal-enter-active { opacity: 1; transform: scale(1); transition: opacity 300ms, transform 300ms; }
-    .modal-exit { opacity: 1; transform: scale(1); }
-    .modal-exit-active { opacity: 0; transform: scale(0.95); transition: opacity 300ms, transform 300ms; }
-</style>
+        .book-content h1 { @apply text-3xl font-bold mb-6 text-slate-900 border-b pb-4; }
+        .book-content h2 { @apply text-2xl font-semibold mt-8 mb-4 text-slate-800; }
+        .book-content p { @apply mb-4 leading-relaxed text-slate-600 text-lg; }
+        .book-content strong { @apply text-slate-900; }
+        
+        .active-tab { @apply bg-slate-800 text-white border-l-4 border-indigo-500; }
+        
+        .dedication-gradient {
+            background: linear-gradient(135deg, #f8fafc 0%, #e0e7ff 100%);
+        }
+    </style>
