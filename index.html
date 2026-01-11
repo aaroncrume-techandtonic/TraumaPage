@@ -8,10 +8,51 @@
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap');
         
-        /* Chosen Palette: Medicine Wheel Harmony */
-        body { font-family: 'Inter', sans-serif; background-color: #F8FAFC; color: #1E293B; overflow: hidden; }
+        body { 
+            font-family: 'Inter', sans-serif; 
+            background-color: #F8FAFC; 
+            color: #1E293B; 
+            overflow: hidden; 
+            position: relative;
+        }
+
+        /* Enhanced Visual Background */
+        body::before {
+            content: "";
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: -1;
+            background-image: 
+                radial-gradient(circle at 10% 10%, rgba(251, 191, 36, 0.15) 0%, transparent 40%),
+                radial-gradient(circle at 90% 15%, rgba(239, 68, 68, 0.15) 0%, transparent 40%),
+                radial-gradient(circle at 85% 85%, rgba(30, 41, 59, 0.12) 0%, transparent 40%),
+                radial-gradient(circle at 15% 90%, rgba(203, 213, 225, 0.5) 0%, transparent 40%);
+            pointer-events: none;
+        }
+
+        .bg-shape {
+            position: fixed;
+            border-radius: 50%;
+            filter: blur(80px);
+            z-index: -2;
+            opacity: 0.5;
+            pointer-events: none;
+        }
+
+        .bg-grid {
+            position: fixed;
+            inset: 0;
+            background-image: radial-gradient(#cbd5e1 1.5px, transparent 1.5px);
+            background-size: 40px 40px;
+            opacity: 0.2;
+            z-index: -1;
+            pointer-events: none;
+        }
         
         .chart-container {
             position: relative;
@@ -22,153 +63,162 @@
             margin: 0 auto;
         }
         
-        .sign-card { transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); cursor: pointer; }
-        .sign-card:hover { transform: translateY(-4px); box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1); }
-        
-        .bg-east { background-color: #FEF3C7; }
-        .bg-south { background-color: #FEE2E2; }
-        .bg-west { background-color: #E2E8F0; }
-        .bg-north { background-color: #F9FAFB; }
+        .sign-card { 
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1); 
+            cursor: pointer; 
+            background: rgba(255, 255, 255, 0.85);
+            backdrop-filter: blur(16px);
+            border: 1px solid rgba(255, 255, 255, 0.4);
+        }
+        .sign-card:hover { transform: translateY(-8px); box-shadow: 0 20px 40px -10px rgba(0, 0, 0, 0.1); }
 
         @keyframes breathe {
             0%, 100% { transform: scale(1); opacity: 0.8; }
-            50% { transform: scale(1.5); opacity: 0.4; }
+            50% { transform: scale(1.4); opacity: 0.4; }
         }
         .breathing-circle { animation: breathe 8s infinite ease-in-out; }
 
-        .book-content h1 { @apply text-4xl font-black mt-12 mb-8 text-slate-900 border-b-4 border-indigo-500 pb-4; }
-        .book-content h2 { @apply text-2xl font-bold mt-12 mb-6 text-slate-800 flex items-center gap-2; }
-        .book-content h3 { @apply text-xl font-bold mt-8 mb-4 text-indigo-600; }
-        .book-content p { @apply mb-6 leading-relaxed text-slate-600 text-lg; }
-        .book-content strong { @apply text-slate-900 font-bold; }
-        .book-content ul { @apply list-disc ml-6 mb-8 space-y-3 text-slate-600 text-lg; }
+        /* Reader Content Layout */
+        .book-content { text-align: left; }
+        .book-content h1 { @apply text-5xl font-black mt-16 mb-10 text-slate-900 border-b-8 border-indigo-500 pb-6; }
+        .book-content h2 { @apply text-3xl font-bold mt-16 mb-8 text-slate-800 flex items-center gap-3 border-l-8 border-indigo-400 pl-4; }
+        .book-content h3 { @apply text-2xl font-bold mt-10 mb-6 text-indigo-700; }
+        .book-content p { @apply mb-8 leading-relaxed text-slate-700 text-xl font-normal; }
+        .book-content strong { @apply text-slate-900 font-extrabold; }
+        .book-content ul { @apply list-disc ml-8 mb-10 space-y-4 text-slate-700 text-xl; }
         
-        .active-tab { @apply bg-slate-800 text-white border-l-4 border-indigo-500; }
+        .active-tab { @apply bg-slate-800 text-white border-l-4 border-indigo-500 shadow-xl; }
         
-        .dedication-gradient {
-            background: linear-gradient(135deg, #f8fafc 0%, #e0e7ff 100%);
-        }
+        .animate-fade-in { animation: fadeIn 0.5s ease-out forwards; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
 
-        .animate-fade-in { animation: fadeIn 0.3s ease-in; }
-        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+        /* Custom Scrollbar for Reader */
+        .reader-scroll::-webkit-scrollbar { width: 10px; }
+        .reader-scroll::-webkit-scrollbar-track { background: transparent; }
+        .reader-scroll::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 20px; border: 3px solid white; }
     </style>
 </head>
 <body class="flex h-screen">
+    <div class="bg-grid"></div>
+    <div class="bg-shape w-[500px] h-[500px] bg-yellow-100 top-[-15%] left-[-15%]"></div>
+    <div class="bg-shape w-[500px] h-[500px] bg-red-100 bottom-[-15%] right-[-15%]"></div>
 
     <!-- Sidebar Navigation -->
-    <nav class="w-20 md:w-64 bg-slate-900 text-white flex flex-col flex-shrink-0 z-20 transition-all duration-300">
-        <div class="p-6 border-b border-slate-800 flex items-center gap-3">
-            <div class="w-10 h-10 rounded-full border-2 border-white/20 relative overflow-hidden flex items-center justify-center bg-slate-800">
-                <div class="absolute top-0 right-0 w-1/2 h-1/2 bg-yellow-400 opacity-60"></div>
-                <div class="absolute bottom-0 right-0 w-1/2 h-1/2 bg-red-500 opacity-60"></div>
-                <div class="absolute bottom-0 left-0 w-1/2 h-1/2 bg-slate-900 opacity-60"></div>
-                <div class="absolute top-0 left-0 w-1/2 h-1/2 bg-slate-100 opacity-60"></div>
+    <nav class="w-20 md:w-72 bg-slate-900 text-white flex flex-col flex-shrink-0 z-30 transition-all duration-300">
+        <div class="p-8 border-b border-slate-800 flex items-center gap-4">
+            <div class="w-12 h-12 rounded-2xl border-2 border-white/20 relative overflow-hidden flex items-center justify-center bg-slate-800 shadow-2xl">
+                <div class="absolute top-0 right-0 w-1/2 h-1/2 bg-yellow-400 opacity-70"></div>
+                <div class="absolute bottom-0 right-0 w-1/2 h-1/2 bg-red-500 opacity-70"></div>
+                <div class="absolute bottom-0 left-0 w-1/2 h-1/2 bg-slate-900 opacity-70"></div>
+                <div class="absolute top-0 left-0 w-1/2 h-1/2 bg-slate-100 opacity-70"></div>
             </div>
-            <span class="font-bold text-lg hidden md:block text-slate-100">Trauma Compass</span>
+            <span class="font-black text-xl hidden md:block text-slate-100 tracking-tighter">Trauma Compass</span>
         </div>
 
-        <div class="flex-1 py-4 space-y-1 overflow-y-auto">
-            <button onclick="switchView('dashboard')" id="nav-dashboard" class="w-full flex items-center gap-4 px-6 py-4 hover:bg-slate-800 transition-colors active-tab">
-                <i class="fa-solid fa-house w-6 text-center"></i>
-                <span class="hidden md:block">Overview</span>
+        <div class="flex-1 py-6 space-y-2 overflow-y-auto">
+            <button onclick="switchView('dashboard')" id="nav-dashboard" class="w-full flex items-center gap-5 px-8 py-5 hover:bg-slate-800 transition-all active-tab group">
+                <i class="fa-solid fa-house text-xl w-6 text-center group-hover:scale-110 transition-transform"></i>
+                <span class="hidden md:block font-bold">Overview</span>
             </button>
-            <button onclick="switchView('dedication')" id="nav-dedication" class="w-full flex items-center gap-4 px-6 py-4 hover:bg-slate-800 transition-colors">
-                <i class="fa-solid fa-heart w-6 text-center text-rose-400"></i>
-                <span class="hidden md:block">Dedication</span>
+            <button onclick="switchView('dedication')" id="nav-dedication" class="w-full flex items-center gap-5 px-8 py-5 hover:bg-slate-800 transition-all group">
+                <i class="fa-solid fa-heart text-xl w-6 text-center text-rose-400 group-hover:scale-110 transition-transform"></i>
+                <span class="hidden md:block font-bold">Dedication</span>
             </button>
-            <button onclick="switchView('identify')" id="nav-identify" class="w-full flex items-center gap-4 px-6 py-4 hover:bg-slate-800 transition-colors">
-                <i class="fa-solid fa-magnifying-glass w-6 text-center text-yellow-400"></i>
-                <span class="hidden md:block">Identify (East)</span>
+            <button onclick="switchView('identify')" id="nav-identify" class="w-full flex items-center gap-5 px-8 py-5 hover:bg-slate-800 transition-all group">
+                <i class="fa-solid fa-magnifying-glass text-xl w-6 text-center text-yellow-400 group-hover:scale-110 transition-transform"></i>
+                <span class="hidden md:block font-bold">Identify (East)</span>
             </button>
-            <button onclick="switchView('biology')" id="nav-biology" class="w-full flex items-center gap-4 px-6 py-4 hover:bg-slate-800 transition-colors">
-                <i class="fa-solid fa-brain w-6 text-center text-red-500"></i>
-                <span class="hidden md:block">Biology (South)</span>
+            <button onclick="switchView('biology')" id="nav-biology" class="w-full flex items-center gap-5 px-8 py-5 hover:bg-slate-800 transition-all group">
+                <i class="fa-solid fa-brain text-xl w-6 text-center text-red-500 group-hover:scale-110 transition-transform"></i>
+                <span class="hidden md:block font-bold">Biology (South)</span>
             </button>
-            <button onclick="switchView('heal')" id="nav-heal" class="w-full flex items-center gap-4 px-6 py-4 hover:bg-slate-800 transition-colors">
-                <i class="fa-solid fa-seedling w-6 text-center text-slate-400"></i>
-                <span class="hidden md:block">Healing (West)</span>
+            <button onclick="switchView('heal')" id="nav-heal" class="w-full flex items-center gap-5 px-8 py-5 hover:bg-slate-800 transition-all group">
+                <i class="fa-solid fa-seedling text-xl w-6 text-center text-slate-400 group-hover:scale-110 transition-transform"></i>
+                <span class="hidden md:block font-bold">Healing (West)</span>
             </button>
-            <button onclick="switchView('resources')" id="nav-resources" class="w-full flex items-center gap-4 px-6 py-4 hover:bg-slate-800 transition-colors">
-                <i class="fa-solid fa-hands-holding w-6 text-center text-white"></i>
-                <span class="hidden md:block">Resources (North)</span>
+            <button onclick="switchView('resources')" id="nav-resources" class="w-full flex items-center gap-5 px-8 py-5 hover:bg-slate-800 transition-all group">
+                <i class="fa-solid fa-hands-holding text-xl w-6 text-center text-white group-hover:scale-110 transition-transform"></i>
+                <span class="hidden md:block font-bold">Resources (North)</span>
             </button>
         </div>
 
-        <div class="p-4 border-t border-slate-800">
-            <button onclick="toggleReader()" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white p-3 rounded-xl flex items-center justify-center gap-2 transition-all shadow-lg">
+        <div class="p-6 border-t border-slate-800">
+            <button onclick="toggleReader()" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white p-4 rounded-2xl flex items-center justify-center gap-3 transition-all shadow-xl font-black uppercase tracking-widest text-xs active:scale-95">
                 <i class="fa-solid fa-book-open"></i>
-                <span class="hidden md:block font-semibold">Reader Mode</span>
+                <span class="hidden md:block">Open Library</span>
             </button>
         </div>
     </nav>
 
     <!-- Main Content -->
-    <main class="flex-1 flex flex-col min-w-0 overflow-hidden">
-        <header class="h-20 bg-white border-b border-slate-200 px-8 flex items-center justify-between shadow-sm z-10">
-            <div>
-                <h1 id="view-title" class="text-xl font-bold text-slate-800">Series Dashboard</h1>
-                <p id="view-desc" class="text-sm text-slate-500">Your roadmap from trauma to integrated healing.</p>
+    <main class="flex-1 flex flex-col min-w-0 overflow-hidden relative">
+        <!-- Top Persistent Header -->
+        <header class="h-24 bg-white/70 backdrop-blur-xl border-b border-slate-200 px-10 flex items-center justify-between shadow-sm z-20">
+            <div class="text-left">
+                <h1 id="view-title" class="text-2xl font-black text-slate-900 tracking-tight">Series Dashboard</h1>
+                <p id="view-desc" class="text-sm text-slate-500 font-bold uppercase tracking-wider mt-1">From Trauma to Healing</p>
             </div>
-            <div class="flex items-center gap-4 text-xs font-bold text-slate-400">
-                <span class="flex items-center gap-2"><div class="w-3 h-3 rounded-full bg-yellow-400"></div> IDENTIFY</span>
-                <span class="flex items-center gap-2"><div class="w-3 h-3 rounded-full bg-red-500"></div> UNDERSTAND</span>
-                <span class="flex items-center gap-2"><div class="w-3 h-3 rounded-full bg-slate-800"></div> INTEGRATE</span>
+            <div class="flex items-center gap-4">
+                <a href="https://techandtonic.store" class="flex items-center gap-3 text-slate-600 hover:text-indigo-600 transition-all font-black text-sm border-2 border-slate-200 bg-white/50 px-6 py-3 rounded-full hover:border-indigo-400 hover:bg-indigo-50 shadow-md active:scale-95 group">
+                    <i class="fa-solid fa-circle-arrow-left text-lg group-hover:-translate-x-1 transition-transform"></i>
+                    <span>TECHANDTONIC.STORE</span>
+                </a>
             </div>
         </header>
 
-        <div id="scroll-area" class="flex-1 overflow-y-auto p-8 md:p-12">
+        <div id="scroll-area" class="flex-1 overflow-y-auto p-10 md:p-16 relative">
             
             <!-- Dashboard View -->
-            <div id="view-dashboard" class="space-y-12">
-                <div class="bg-white p-8 rounded-3xl border border-slate-200 shadow-sm max-w-4xl">
-                    <h2 class="text-2xl font-bold mb-4 text-slate-800">Welcome to the Healing Path</h2>
-                    <p class="text-slate-600 leading-relaxed mb-6">
-                        Trauma recovery is a journey through four quadrants. This application allows you to explore the physical signs, 
-                        the neurobiology of your survival system, and the practical tools to reclaim your peace. 
-                        Inspired by the Medicine Wheel, we treat healing as a holistic integration of Body, Mind, and Spirit.
+            <div id="view-dashboard" class="space-y-16 max-w-7xl mx-auto">
+                <div class="bg-white/90 backdrop-blur-2xl p-10 md:p-14 rounded-[3rem] border border-white shadow-2xl max-w-5xl text-left">
+                    <h2 class="text-4xl font-black mb-8 text-slate-900 tracking-tighter">Architecture of Hope</h2>
+                    <p class="text-slate-600 leading-relaxed mb-12 text-2xl font-medium max-w-4xl">
+                        Trauma recovery is a journey through four quadrants. This companion allows you to explore the physical signs, 
+                        the neurobiology of survival, and the practical tools to reclaim your peace. 
+                        Holistic integration of Body, Mind, and Spirit.
                     </p>
-                    <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
-                        <div onclick="switchView('identify')" class="p-4 rounded-2xl bg-yellow-50 border border-yellow-200 text-center cursor-pointer hover:shadow-md transition-all">
-                            <div class="font-bold text-yellow-600">EAST</div>
-                            <div class="text-xs text-slate-500">The Signs</div>
+                    <div class="grid grid-cols-2 md:grid-cols-4 gap-6">
+                        <div onclick="switchView('identify')" class="p-8 rounded-[2rem] bg-yellow-50 border-2 border-yellow-100 text-center cursor-pointer hover:shadow-2xl transition-all hover:scale-[1.05] hover:border-yellow-300">
+                            <div class="font-black text-yellow-600 text-xs tracking-[0.2em] mb-2 uppercase">EAST</div>
+                            <div class="text-slate-900 font-extrabold text-lg">IDENTIFY</div>
                         </div>
-                        <div onclick="switchView('biology')" class="p-4 rounded-2xl bg-red-50 border border-red-200 text-center cursor-pointer hover:shadow-md transition-all">
-                            <div class="font-bold text-red-600">SOUTH</div>
-                            <div class="text-xs text-slate-500">The Brain</div>
+                        <div onclick="switchView('biology')" class="p-8 rounded-[2rem] bg-red-50 border-2 border-red-100 text-center cursor-pointer hover:shadow-2xl transition-all hover:scale-[1.05] hover:border-red-300">
+                            <div class="font-black text-red-600 text-xs tracking-[0.2em] mb-2 uppercase">SOUTH</div>
+                            <div class="text-slate-900 font-extrabold text-lg">UNDERSTAND</div>
                         </div>
-                        <div onclick="switchView('heal')" class="p-4 rounded-2xl bg-slate-100 border border-slate-300 text-center cursor-pointer hover:shadow-md transition-all">
-                            <div class="font-bold text-slate-700">WEST</div>
-                            <div class="text-xs text-slate-500">The Tools</div>
+                        <div onclick="switchView('heal')" class="p-8 rounded-[2rem] bg-slate-100 border-2 border-slate-200 text-center cursor-pointer hover:shadow-2xl transition-all hover:scale-[1.05] hover:border-slate-400">
+                            <div class="font-black text-slate-600 text-xs tracking-[0.2em] mb-2 uppercase">WEST</div>
+                            <div class="text-slate-900 font-extrabold text-lg">INTEGRATE</div>
                         </div>
-                        <div onclick="switchView('resources')" class="p-4 rounded-2xl bg-white border border-slate-200 text-center cursor-pointer hover:shadow-md transition-all">
-                            <div class="font-bold text-slate-400">NORTH</div>
-                            <div class="text-xs text-slate-500">Support</div>
+                        <div onclick="switchView('resources')" class="p-8 rounded-[2rem] bg-white border-2 border-slate-100 text-center cursor-pointer hover:shadow-2xl transition-all hover:scale-[1.05] hover:border-indigo-200">
+                            <div class="font-black text-slate-400 text-xs tracking-[0.2em] mb-2 uppercase">NORTH</div>
+                            <div class="text-slate-900 font-extrabold text-lg">SUPPORT</div>
                         </div>
                     </div>
                 </div>
 
-                <div class="grid md:grid-cols-2 gap-8 max-w-6xl">
-                    <div class="bg-white p-6 rounded-3xl border border-slate-200 shadow-sm">
-                        <h3 class="font-bold text-slate-800 mb-2">Trauma Spectrum Profile</h3>
-                        <p class="text-xs text-slate-500 mb-4">Focus areas: Event Impact vs. Relational/Identity Impact.</p>
+                <div class="grid lg:grid-cols-2 gap-10">
+                    <div class="bg-white/80 backdrop-blur-md p-10 rounded-[3rem] border border-white/50 shadow-2xl text-left">
+                        <h3 class="font-black text-slate-900 mb-2 text-xl tracking-tight">Trauma Spectrum Profile</h3>
+                        <p class="text-xs text-slate-500 mb-8 font-black uppercase tracking-widest border-b pb-4">PTSD Symptoms vs. Identity Impact</p>
                         <div class="chart-container">
                             <canvas id="mainRadarChart"></canvas>
                         </div>
                     </div>
-                    <div class="bg-white p-6 rounded-3xl border border-slate-200 shadow-sm flex flex-col justify-center">
-                        <h3 class="font-bold text-slate-800 mb-6 text-center">Series Progress Overview</h3>
-                        <div class="space-y-6">
-                            <div>
-                                <div class="flex justify-between text-xs font-bold mb-2 text-slate-600"><span>BOOK 1: SIGNS IDENTIFIED</span><span>17 / 17</span></div>
-                                <div class="h-2 w-full bg-slate-100 rounded-full"><div class="h-full w-full bg-yellow-400 rounded-full"></div></div>
+                    <div class="bg-white/80 backdrop-blur-md p-10 rounded-[3rem] border border-white/50 shadow-2xl flex flex-col justify-center">
+                        <h3 class="font-black text-slate-900 mb-10 text-center text-xl tracking-tight">Series Progress Overview</h3>
+                        <div class="space-y-10">
+                            <div class="text-left">
+                                <div class="flex justify-between text-xs font-black mb-3 text-slate-600 uppercase tracking-[0.15em]"><span>Book 1: Signs Identified</span><span>17 / 17</span></div>
+                                <div class="h-4 w-full bg-slate-100 rounded-full overflow-hidden shadow-inner"><div class="h-full w-full bg-yellow-400 rounded-full"></div></div>
                             </div>
-                            <div>
-                                <div class="flex justify-between text-xs font-bold mb-2 text-slate-600"><span>BOOK 2: BIOLOGY MAPPED</span><span>100%</span></div>
-                                <div class="h-2 w-full bg-slate-100 rounded-full"><div class="h-full w-full bg-red-500 rounded-full"></div></div>
+                            <div class="text-left">
+                                <div class="flex justify-between text-xs font-black mb-3 text-slate-600 uppercase tracking-[0.15em]"><span>Book 2: Biology Mapped</span><span>100%</span></div>
+                                <div class="h-4 w-full bg-slate-100 rounded-full overflow-hidden shadow-inner"><div class="h-full w-full bg-red-500 rounded-full"></div></div>
                             </div>
-                            <div>
-                                <div class="flex justify-between text-xs font-bold mb-2 text-slate-600"><span>BOOK 3: TOOLS INTEGRATED</span><span>PROGRESSING</span></div>
-                                <div class="h-2 w-full bg-slate-100 rounded-full"><div class="h-full w-2/3 bg-slate-800 rounded-full"></div></div>
+                            <div class="text-left">
+                                <div class="flex justify-between text-xs font-black mb-3 text-slate-600 uppercase tracking-[0.15em]"><span>Book 3: Tools Integrated</span><span>PROGRESSING</span></div>
+                                <div class="h-4 w-full bg-slate-100 rounded-full overflow-hidden shadow-inner"><div class="h-full w-2/3 bg-indigo-600 rounded-full"></div></div>
                             </div>
                         </div>
                     </div>
@@ -176,165 +226,178 @@
             </div>
 
             <!-- Dedication View -->
-            <div id="view-dedication" class="hidden animate-fade-in space-y-8">
-                <div class="max-w-4xl mx-auto py-12 px-8 bg-white rounded-3xl border border-indigo-100 shadow-xl relative overflow-hidden">
-                    <div class="absolute top-0 right-0 p-8 opacity-5 text-indigo-900"><i class="fa-solid fa-heart text-9xl"></i></div>
-                    <div class="relative z-10 text-center">
-                        <h2 class="text-indigo-900 text-3xl md:text-5xl font-black mb-6 tracking-tight">Dedicated to Jordan Lynn Stewart</h2>
-                        <div class="w-24 h-1 bg-rose-400 mx-auto mb-8 rounded-full"></div>
+            <div id="view-dedication" class="hidden animate-fade-in space-y-12 max-w-6xl mx-auto">
+                <div class="py-24 px-12 bg-white/95 backdrop-blur-3xl rounded-[4rem] border border-indigo-100 shadow-[0_50px_100px_-20px_rgba(0,0,0,0.15)] relative overflow-hidden text-center">
+                    <div class="absolute top-0 right-0 p-12 opacity-[0.04] text-indigo-900"><i class="fa-solid fa-heart text-[25rem]"></i></div>
+                    <div class="relative z-10">
+                        <h2 class="text-indigo-950 text-5xl md:text-7xl font-black mb-10 tracking-tighter">Dedicated to Jordan Lynn Stewart</h2>
+                        <div class="w-40 h-2 bg-rose-400 mx-auto mb-12 rounded-full"></div>
                         
-                        <div class="prose prose-indigo max-w-none text-slate-600 italic text-xl mb-12">
+                        <div class="max-w-4xl mx-auto text-slate-800 italic text-3xl leading-relaxed font-semibold mb-20">
                             "A tribute to the heart that speaks the unspoken and the soul that dares to shine light into the shadows of silence."
                         </div>
                         
-                        <div class="grid md:grid-cols-3 gap-6 text-left">
-                            <div class="bg-indigo-50 p-6 rounded-2xl border border-indigo-100">
-                                <i class="fa-solid fa-star text-indigo-600 mb-4 text-xl"></i>
-                                <h4 class="font-bold text-indigo-900 mb-2 text-sm">Brave Advocacy</h4>
-                                <p class="text-sm text-indigo-700 leading-relaxed">Honoring the intentional steps taken to raise awareness for Complex PTSD and the strength it takes to lead others toward the light.</p>
+                        <div class="grid md:grid-cols-3 gap-10 text-left">
+                            <div class="bg-white p-10 rounded-[2.5rem] border border-slate-100 shadow-xl transition-all hover:-translate-y-2">
+                                <div class="w-16 h-16 bg-indigo-50 rounded-3xl flex items-center justify-center shadow-inner mb-8">
+                                    <i class="fa-solid fa-star text-indigo-600 text-2xl"></i>
+                                </div>
+                                <h4 class="font-black text-indigo-950 mb-4 text-xl">Brave Advocacy</h4>
+                                <p class="text-slate-600 leading-relaxed font-bold text-lg">Honoring the intentional steps taken to raise awareness for Complex PTSD and the strength it takes to lead others toward the light.</p>
                             </div>
-                            <div class="bg-indigo-50 p-6 rounded-2xl border border-indigo-100">
-                                <i class="fa-solid fa-handshake-angle text-indigo-600 mb-4 text-xl"></i>
-                                <h4 class="font-bold text-indigo-900 mb-2 text-sm">Cycle Breaker</h4>
-                                <p class="text-sm text-indigo-700 leading-relaxed">For recognizing the hidden architecture of trauma and choosing the path of awareness over the comfort of silence.</p>
+                            <div class="bg-white p-10 rounded-[2.5rem] border border-slate-100 shadow-xl transition-all hover:-translate-y-2">
+                                <div class="w-16 h-16 bg-rose-50 rounded-3xl flex items-center justify-center shadow-inner mb-8">
+                                    <i class="fa-solid fa-handshake-angle text-rose-600 text-2xl"></i>
+                                </div>
+                                <h4 class="font-black text-indigo-950 mb-4 text-xl">Cycle Breaker</h4>
+                                <p class="text-slate-600 leading-relaxed font-bold text-lg">For recognizing the hidden architecture of trauma and choosing the path of awareness over the comfort of silence.</p>
                             </div>
-                            <div class="bg-indigo-50 p-6 rounded-2xl border border-indigo-100">
-                                <i class="fa-solid fa-sun text-indigo-600 mb-4 text-xl"></i>
-                                <h4 class="font-bold text-indigo-900 mb-2 text-sm">A Beacon of Hope</h4>
-                                <p class="text-sm text-indigo-700 leading-relaxed">Dedicated with love to my cousin, whose journey inspires this work and provides a roadmap for others seeking their own peace.</p>
+                            <div class="bg-white p-10 rounded-[2.5rem] border border-slate-100 shadow-xl transition-all hover:-translate-y-2">
+                                <div class="w-16 h-16 bg-yellow-50 rounded-3xl flex items-center justify-center shadow-inner mb-8">
+                                    <i class="fa-solid fa-sun text-yellow-600 text-2xl"></i>
+                                </div>
+                                <h4 class="font-black text-indigo-950 mb-4 text-xl">A Beacon of Hope</h4>
+                                <p class="text-slate-600 leading-relaxed font-bold text-lg">Dedicated with love to my cousin, whose journey inspires this work and provides a roadmap for others seeking their own peace.</p>
                             </div>
                         </div>
                     </div>
                 </div>
             </div>
 
-            <!-- Identify View -->
-            <div id="view-identify" class="hidden space-y-8">
-                <div class="bg-yellow-50 border-l-4 border-yellow-400 p-6 rounded-r-2xl max-w-4xl">
-                    <h3 class="text-yellow-800 font-bold mb-1">East: The Physical & Beginnings</h3>
-                    <p class="text-sm text-yellow-700 leading-relaxed">Identification is the first act of rebellion. Click a sign to reveal the hidden logic behind the survival behavior.</p>
+            <!-- Eastern View -->
+            <div id="view-identify" class="hidden animate-fade-in space-y-12 max-w-7xl mx-auto">
+                <div class="bg-yellow-50/90 backdrop-blur-md border-l-[12px] border-yellow-400 p-12 rounded-r-[3rem] shadow-xl text-left">
+                    <h3 class="text-yellow-950 font-black text-3xl mb-4 tracking-tighter">East: The Physical & Beginnings</h3>
+                    <p class="text-yellow-900 font-bold text-xl leading-relaxed max-w-4xl">Identification is the first act of rebellion against silence. Explore the 17 signs and the hidden logic behind the survival behavior.</p>
                 </div>
-                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6" id="signs-grid">
-                    <!-- JS Injected Cards -->
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8" id="signs-grid">
+                    <!-- Cards -->
                 </div>
             </div>
 
-            <!-- Biology View -->
-            <div id="view-biology" class="hidden space-y-8">
-                <div class="bg-red-50 border-l-4 border-red-500 p-6 rounded-r-2xl max-w-4xl">
-                    <h3 class="text-red-800 font-bold mb-1">South: The Emotional Engine</h3>
-                    <p class="text-sm text-red-700 leading-relaxed">Understanding the "Engine Room." See how your nervous system shifts energy to keep you alive.</p>
+            <!-- Southern View -->
+            <div id="view-biology" class="hidden animate-fade-in space-y-12 max-w-7xl mx-auto">
+                <div class="bg-red-50/90 backdrop-blur-md border-l-[12px] border-red-500 p-12 rounded-r-[3rem] shadow-xl text-left">
+                    <h3 class="text-red-950 font-black text-3xl mb-4 tracking-tighter">South: The Emotional Engine</h3>
+                    <p class="text-red-900 font-bold text-xl leading-relaxed max-w-4xl">Understanding the "Engine Room." See how your nervous system shifts energy states instantaneously to keep you alive.</p>
                 </div>
-                <div class="grid lg:grid-cols-2 gap-8 max-w-6xl">
-                    <div class="bg-white p-8 rounded-3xl border border-slate-200 shadow-sm">
-                        <h3 class="font-bold text-slate-800 mb-4 text-sm uppercase tracking-wider">The Polyvagal Ladder</h3>
+                <div class="grid lg:grid-cols-2 gap-10">
+                    <div class="bg-white/80 backdrop-blur-md p-14 rounded-[3rem] border border-white/50 shadow-2xl text-left">
+                        <h3 class="font-black text-slate-900 mb-8 text-sm uppercase tracking-[0.2em]">The Polyvagal Ladder</h3>
                         <div class="chart-container">
                             <canvas id="polyvagalBarChart"></canvas>
                         </div>
                     </div>
-                    <div class="bg-white p-8 rounded-3xl border border-slate-200 space-y-6 shadow-sm">
-                        <h3 class="font-bold text-slate-800 text-sm uppercase tracking-wider">The Brain Hijack</h3>
-                        <div class="p-4 rounded-xl border border-slate-100 bg-red-50">
-                            <h4 class="font-bold text-red-700 text-sm">Amygdala (Smoke Detector)</h4>
-                            <p class="text-xs text-red-600 mt-1">In trauma, it is hyper-sensitive, screaming "FIRE!" at the smell of burnt toast.</p>
+                    <div class="bg-white/80 backdrop-blur-md p-14 rounded-[3rem] border border-white/50 space-y-8 shadow-2xl text-left">
+                        <h3 class="font-black text-slate-900 text-sm uppercase tracking-[0.2em]">Neurochemical Hijack</h3>
+                        <div class="p-8 rounded-[2rem] border border-red-100 bg-red-50/50 group hover:bg-red-100 transition-colors">
+                            <h4 class="font-black text-red-900 text-lg mb-2">Amygdala (The Smoke Detector)</h4>
+                            <p class="text-slate-800 font-bold leading-relaxed">In trauma, it is hyper-sensitive. It doesn't just detect fire; it screams "FIRE!" at the smell of burnt toast.</p>
                         </div>
-                        <div class="p-4 rounded-xl border border-slate-100 bg-slate-50">
-                            <h4 class="font-bold text-slate-700 text-sm">Prefrontal Cortex (The Pilot)</h4>
-                            <p class="text-xs text-slate-500 mt-1">During triggers, the Pilot is kicked out of the cockpit. Logic goes offline.</p>
+                        <div class="p-8 rounded-[2rem] border border-slate-100 bg-slate-50/50 group hover:bg-slate-200 transition-colors">
+                            <h4 class="font-black text-slate-900 text-lg mb-2">Prefrontal Cortex (The Pilot)</h4>
+                            <p class="text-slate-700 font-bold leading-relaxed">During survival triggers, the Pilot is physically kicked out of the cockpit. Logic goes offline.</p>
                         </div>
-                        <div class="p-4 rounded-xl border border-slate-100 bg-indigo-50">
-                            <h4 class="font-bold text-indigo-700 text-sm">Hippocampus (The Librarian)</h4>
-                            <p class="text-xs text-indigo-600 mt-1">Fails to "date stamp" memories, making the past feel like it is happening NOW.</p>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Healing View -->
-            <div id="view-heal" class="hidden space-y-8">
-                <div class="bg-slate-800 p-6 rounded-2xl text-white max-w-4xl shadow-lg">
-                    <h3 class="font-bold mb-1">West: Mental & Introspection</h3>
-                    <p class="text-sm text-slate-400 leading-relaxed">Healing is a daily practice. Use these tools to regulate your system when the alarm goes off falsely.</p>
-                </div>
-                <div class="grid md:grid-cols-2 gap-8 max-w-6xl">
-                    <div class="bg-white p-12 rounded-3xl border border-slate-200 flex flex-col items-center text-center shadow-sm">
-                        <h4 class="font-bold text-slate-800 mb-2">Paced Breathing</h4>
-                        <p class="text-sm text-slate-500 mb-8">Follow the circle to activate your calm system.</p>
-                        <div class="w-48 h-48 bg-indigo-50 rounded-full flex items-center justify-center relative">
-                            <div class="w-24 h-24 bg-indigo-500/30 rounded-full breathing-circle"></div>
-                            <span class="absolute text-indigo-800 font-bold uppercase tracking-widest text-xs">Breathe</span>
-                        </div>
-                        <div class="mt-8 grid grid-cols-3 gap-4 w-full text-xs font-bold text-slate-400">
-                            <div>IN (4s)</div><div>HOLD (2s)</div><div>OUT (6s)</div>
-                        </div>
-                    </div>
-                    <div class="bg-white p-8 rounded-3xl border border-slate-200 shadow-sm">
-                        <h4 class="font-bold text-slate-800 mb-4 text-sm uppercase tracking-wider">5-4-3-2-1 Grounding Checklist</h4>
-                        <div class="space-y-3">
-                            <label class="flex items-center gap-3 p-3 bg-slate-50 rounded-xl cursor-pointer hover:bg-slate-100 transition-colors">
-                                <input type="checkbox" class="w-5 h-5 rounded text-indigo-600"><span class="text-sm text-slate-700">5 Things you can see</span>
-                            </label>
-                            <label class="flex items-center gap-3 p-3 bg-slate-50 rounded-xl cursor-pointer hover:bg-slate-100 transition-colors">
-                                <input type="checkbox" class="w-5 h-5 rounded text-indigo-600"><span class="text-sm text-slate-700">4 Things you can feel</span>
-                            </label>
-                            <label class="flex items-center gap-3 p-3 bg-slate-50 rounded-xl cursor-pointer hover:bg-slate-100 transition-colors">
-                                <input type="checkbox" class="w-5 h-5 rounded text-indigo-600"><span class="text-sm text-slate-700">3 Things you can hear</span>
-                            </label>
-                            <label class="flex items-center gap-3 p-3 bg-slate-50 rounded-xl cursor-pointer hover:bg-slate-100 transition-colors">
-                                <input type="checkbox" class="w-5 h-5 rounded text-indigo-600"><span class="text-sm text-slate-700">2 Things you can smell</span>
-                            </label>
-                            <label class="flex items-center gap-3 p-3 bg-slate-50 rounded-xl cursor-pointer hover:bg-slate-100 transition-colors">
-                                <input type="checkbox" class="w-5 h-5 rounded text-indigo-600"><span class="text-sm text-slate-700">1 Thing you can taste</span>
-                            </label>
+                        <div class="p-8 rounded-[2rem] border border-indigo-100 bg-indigo-50/50 group hover:bg-indigo-100 transition-colors">
+                            <h4 class="font-black text-indigo-900 text-lg mb-2">Hippocampus (The Librarian)</h4>
+                            <p class="text-indigo-950 font-bold leading-relaxed">Fails to "date stamp" memories. This makes past trauma feel as if it is happening in the current second.</p>
                         </div>
                     </div>
                 </div>
             </div>
 
-            <!-- Resources View -->
-            <div id="view-resources" class="hidden space-y-8">
-                <div class="max-w-4xl">
-                    <h2 class="text-3xl font-bold mb-4 text-slate-800">North: Spiritual Wisdom & Support</h2>
-                    <p class="text-slate-600 mb-8 leading-relaxed">You are not walking this path alone. Access immediate help and community resources here.</p>
-                    <div id="resource-list" class="grid md:grid-cols-2 gap-4">
-                        <!-- JS Injected Resources -->
+            <!-- Western View -->
+            <div id="view-heal" class="hidden animate-fade-in space-y-12 max-w-7xl mx-auto">
+                <div class="bg-slate-950 p-12 rounded-[4rem] text-white shadow-[0_50px_100px_-20px_rgba(0,0,0,0.4)] relative overflow-hidden text-left">
+                    <div class="absolute top-[-25%] right-[-5%] opacity-20"><i class="fa-solid fa-leaf text-[15rem]"></i></div>
+                    <h3 class="font-black text-4xl mb-4 relative z-10 tracking-tighter">West: Mental & Introspection</h3>
+                    <p class="text-slate-400 font-bold text-xl leading-relaxed relative z-10 max-w-3xl">Healing is the presence of Safety. Daily tools to regulate your system when the alarm goes off falsely.</p>
+                </div>
+                <div class="grid md:grid-cols-2 gap-10">
+                    <div class="bg-white/90 backdrop-blur-2xl p-16 rounded-[4rem] border border-white flex flex-col items-center text-center shadow-2xl">
+                        <h4 class="font-black text-slate-900 mb-4 text-2xl tracking-tight">Paced Breathing</h4>
+                        <p class="text-lg text-slate-500 mb-12 font-bold">Anchor your awareness and activate the calm system.</p>
+                        <div class="w-64 h-64 bg-indigo-50 rounded-full flex items-center justify-center relative shadow-[inset_0_10px_30px_rgba(0,0,0,0.05)] border-4 border-indigo-100">
+                            <div class="w-32 h-32 bg-indigo-600/20 rounded-full breathing-circle"></div>
+                            <span class="absolute text-indigo-950 font-black uppercase tracking-[0.3em] text-sm">Breathe</span>
+                        </div>
+                        <div class="mt-12 grid grid-cols-3 gap-8 w-full text-xs font-black text-slate-600 uppercase tracking-widest">
+                            <div class="bg-slate-50 py-4 rounded-3xl">Inhale<br><span class="text-indigo-600 text-lg">4s</span></div>
+                            <div class="bg-slate-50 py-4 rounded-3xl">Hold<br><span class="text-indigo-600 text-lg">2s</span></div>
+                            <div class="bg-slate-50 py-4 rounded-3xl">Exhale<br><span class="text-indigo-600 text-lg">6s</span></div>
+                        </div>
                     </div>
+                    <div class="bg-white/90 backdrop-blur-2xl p-14 rounded-[4rem] border border-white shadow-2xl text-left">
+                        <h4 class="font-black text-slate-900 mb-8 text-sm uppercase tracking-[0.25em]">Grounding Checklist (5-4-3-2-1)</h4>
+                        <div class="space-y-5">
+                            <label class="flex items-center gap-6 p-6 bg-slate-50/70 rounded-[2rem] cursor-pointer hover:bg-white transition-all border-2 border-transparent hover:border-indigo-100 shadow-sm group">
+                                <input type="checkbox" class="w-8 h-8 rounded-xl text-indigo-600 focus:ring-indigo-500 border-2 border-slate-300 transition-all group-hover:scale-110"><span class="text-slate-800 font-extrabold text-lg">5 Things you can SEE</span>
+                            </label>
+                            <label class="flex items-center gap-6 p-6 bg-slate-50/70 rounded-[2rem] cursor-pointer hover:bg-white transition-all border-2 border-transparent hover:border-indigo-100 shadow-sm group">
+                                <input type="checkbox" class="w-8 h-8 rounded-xl text-indigo-600 focus:ring-indigo-500 border-2 border-slate-300 transition-all group-hover:scale-110"><span class="text-slate-800 font-extrabold text-lg">4 Things you can FEEL</span>
+                            </label>
+                            <label class="flex items-center gap-6 p-6 bg-slate-50/70 rounded-[2rem] cursor-pointer hover:bg-white transition-all border-2 border-transparent hover:border-indigo-100 shadow-sm group">
+                                <input type="checkbox" class="w-8 h-8 rounded-xl text-indigo-600 focus:ring-indigo-500 border-2 border-slate-300 transition-all group-hover:scale-110"><span class="text-slate-800 font-extrabold text-lg">3 Things you can HEAR</span>
+                            </label>
+                            <label class="flex items-center gap-6 p-6 bg-slate-50/70 rounded-[2rem] cursor-pointer hover:bg-white transition-all border-2 border-transparent hover:border-indigo-100 shadow-sm group">
+                                <input type="checkbox" class="w-8 h-8 rounded-xl text-indigo-600 focus:ring-indigo-500 border-2 border-slate-300 transition-all group-hover:scale-110"><span class="text-slate-800 font-extrabold text-lg">2 Things you can SMELL</span>
+                            </label>
+                            <label class="flex items-center gap-6 p-6 bg-slate-50/70 rounded-[2rem] cursor-pointer hover:bg-white transition-all border-2 border-transparent hover:border-indigo-100 shadow-sm group">
+                                <input type="checkbox" class="w-8 h-8 rounded-xl text-indigo-600 focus:ring-indigo-500 border-2 border-slate-300 transition-all group-hover:scale-110"><span class="text-slate-800 font-extrabold text-lg">1 Thing you can TASTE</span>
+                            </label>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Northern View -->
+            <div id="view-resources" class="hidden animate-fade-in space-y-12 max-w-5xl mx-auto text-left">
+                <div class="text-center mb-16">
+                    <h2 class="text-5xl font-black mb-6 text-slate-950 tracking-tighter">North: Wisdom & Support</h2>
+                    <p class="text-slate-600 font-bold leading-relaxed text-2xl max-w-3xl mx-auto">Safe harbor. Access immediate help and community resources below.</p>
+                </div>
+                <div id="resource-list" class="grid md:grid-cols-2 gap-8">
+                    <!-- Injected -->
                 </div>
             </div>
 
         </div>
     </main>
 
-    <!-- Reader Modal -->
-    <div id="reader-modal" class="fixed inset-0 bg-slate-900/40 backdrop-blur-sm z-50 flex items-center justify-center p-4 hidden">
-        <div class="bg-white w-full max-w-5xl h-[90vh] rounded-3xl shadow-2xl flex flex-col overflow-hidden relative border border-white/20">
-            <header class="p-6 border-b border-slate-100 flex justify-between items-center bg-white sticky top-0">
-                <div class="flex items-center gap-4">
-                    <button onclick="toggleReader()" class="text-slate-400 hover:text-slate-800 transition-colors"><i class="fa-solid fa-xmark text-xl"></i></button>
-                    <h3 class="font-bold text-slate-800">Trauma Compass Collection</h3>
+    <!-- Consolidated Reader Modal -->
+    <div id="reader-modal" class="fixed inset-0 bg-slate-950/80 backdrop-blur-2xl z-50 flex items-center justify-center p-4 hidden">
+        <div class="bg-white w-full max-w-7xl h-[94vh] rounded-[4rem] shadow-[0_50px_100px_rgba(0,0,0,0.5)] flex flex-col overflow-hidden relative border border-white/20">
+            <header class="p-10 border-b border-slate-100 flex justify-between items-center bg-white sticky top-0 shadow-sm z-10">
+                <div class="flex items-center gap-8">
+                    <button onclick="toggleReader()" class="text-slate-400 hover:text-red-500 transition-all bg-slate-50 p-4 rounded-3xl hover:shadow-lg hover:scale-105"><i class="fa-solid fa-xmark text-3xl"></i></button>
+                    <div class="text-left">
+                        <h3 class="font-black text-3xl text-slate-900 tracking-tighter">The Complete Trauma Collection</h3>
+                        <p class="text-xs font-black text-slate-400 uppercase tracking-[0.3em] mt-2">Identification • Biology • Integration</p>
+                    </div>
                 </div>
-                <div class="flex items-center gap-3">
-                    <div id="tts-indicator" class="hidden flex items-center gap-2 text-indigo-600 text-xs font-bold animate-pulse"><i class="fa-solid fa-volume-high"></i> READING ALOUD</div>
-                    <button onclick="toggleTTS()" id="tts-btn" class="flex items-center gap-2 bg-indigo-50 text-indigo-600 px-4 py-2 rounded-full font-bold text-sm hover:bg-indigo-600 hover:text-white transition-all shadow-sm">
-                        <i class="fa-solid fa-volume-high"></i> Listen
+                <div class="flex items-center gap-6">
+                    <div id="tts-indicator" class="hidden flex items-center gap-3 text-indigo-600 text-xs font-black animate-pulse bg-indigo-50 px-6 py-3 rounded-full border border-indigo-200"><i class="fa-solid fa-waveform-lines"></i> VOICE ENGINE ACTIVE</div>
+                    <button onclick="toggleTTS()" id="tts-btn" class="flex items-center gap-3 bg-indigo-600 text-white px-8 py-4 rounded-3xl font-black text-sm hover:bg-indigo-700 transition-all shadow-xl active:scale-95 group">
+                        <i class="fa-solid fa-volume-high group-hover:scale-110 transition-transform"></i> <span>Listen to Collection</span>
                     </button>
-                    <button onclick="downloadFullCollection()" class="flex items-center gap-2 bg-slate-100 text-slate-700 px-4 py-2 rounded-full font-bold text-sm hover:bg-slate-800 hover:text-white transition-all shadow-sm">
-                        <i class="fa-solid fa-download"></i> Download Full Series
+                    <button onclick="downloadFullCollection()" class="flex items-center gap-3 bg-slate-900 text-white px-8 py-4 rounded-3xl font-black text-sm hover:bg-black transition-all shadow-xl active:scale-95 group">
+                        <i class="fa-solid fa-download group-hover:bounce transition-transform"></i> <span>Download Full Series</span>
                     </button>
                 </div>
             </header>
-            <div class="flex-1 overflow-y-auto p-8 md:p-20 book-content" id="reader-content">
-                <!-- Complete Book contents injected here -->
+            <div class="flex-1 overflow-y-auto p-16 md:p-32 book-content reader-scroll" id="reader-content">
+                <!-- Text Injected Here -->
             </div>
         </div>
     </div>
 
-    <!-- Toast for Notifications -->
-    <div id="toast" class="fixed bottom-8 left-1/2 -translate-x-1/2 bg-slate-800 text-white px-6 py-3 rounded-full shadow-2xl hidden z-[60] text-center min-w-[200px]">
+    <!-- Toast Component -->
+    <div id="toast" class="fixed bottom-12 left-1/2 -translate-x-1/2 bg-slate-900 text-white px-10 py-5 rounded-[2rem] shadow-[0_30px_60px_rgba(0,0,0,0.3)] hidden z-[60] text-center min-w-[350px] font-black text-sm tracking-wide border border-white/10">
         <span id="toast-msg"></span>
     </div>
 
     <script>
+        // Data Structure
         const signs = [
             { title: "Over-explaining", icon: "fa-comments", scenario: "Spending 20 mins drafting a basic email.", logic: "Preemptively soothing others to stay safe from unpredictable moods." },
             { title: "Preemptive Self-Attack", icon: "fa-shield-halved", scenario: "Calling yourself 'stupid' before anyone else can.", logic: "Controlling the pain of criticism by inflicting it yourself first." },
@@ -412,18 +475,17 @@
 
             <h2>Post-Traumatic Growth</h2>
             <p>Survivors often develop "Superpowers": high empathy, the ability to read environments, and incredible resilience. Healing is becoming the integrated, wise, and powerful version of yourself forged in the fire of survival.</p>
-            <p><em>Dedicated to Jordan Lynn Stewart.</em></p>
+            <p><em>This series is dedicated with love to Jordan Lynn Stewart.</em></p>
         `;
 
+        // Logic Implementation
         let isReading = false;
         const synth = window.speechSynthesis;
-        let speechQueue = [];
 
         function init() {
             renderSigns();
             renderResources();
             initCharts();
-            // Pre-warm voices
             synth.getVoices();
         }
 
@@ -434,25 +496,8 @@
             document.getElementById(`view-${viewId}`).classList.remove('hidden');
             document.getElementById(`nav-${viewId}`).classList.add('active-tab');
             
-            const titles = { 
-                dashboard: "Series Dashboard", 
-                dedication: "The Heart of the Project",
-                identify: "Identify (East)", 
-                biology: "Biology (South)", 
-                heal: "Healing (West)", 
-                resources: "Resources (North)" 
-            };
-            const descs = {
-                dashboard: "Your roadmap from trauma to integrated healing.",
-                dedication: "Honoring the advocacy of Jordan Lynn Stewart.",
-                identify: "Recognizing the physical and behavioral manifestations of trauma.",
-                biology: "How the brain and nervous system adapt to survive.",
-                heal: "Daily tools and strategies for retraining the survival alarm.",
-                resources: "Safe harbor and emergency assistance contacts."
-            };
-            
+            const titles = { dashboard: "Series Dashboard", dedication: "The Heart of the Project", identify: "Identify (East)", biology: "Biology (South)", heal: "Integrate (West)", resources: "Support (North)" };
             document.getElementById('view-title').textContent = titles[viewId];
-            document.getElementById('view-desc').textContent = descs[viewId];
             document.getElementById('scroll-area').scrollTop = 0;
         }
 
@@ -460,8 +505,18 @@
             const grid = document.getElementById('signs-grid');
             signs.forEach(s => {
                 const card = document.createElement('div');
-                card.className = "bg-white p-6 rounded-3xl border border-slate-200 sign-card group shadow-sm";
-                card.innerHTML = `<div class="w-10 h-10 rounded-xl bg-yellow-50 text-yellow-600 flex items-center justify-center mb-4 shadow-inner"><i class="fa-solid ${s.icon}"></i></div><h4 class="font-bold mb-2 text-slate-800">${s.title}</h4><p class="text-xs text-slate-500 hidden group-hover:block transition-all duration-300 leading-relaxed"><strong>Logic:</strong> ${s.logic}</p>`;
+                card.className = "sign-card p-10 rounded-[3rem] border border-slate-200 group flex flex-col items-start text-left";
+                card.innerHTML = `
+                    <div class="w-16 h-16 rounded-3xl bg-yellow-50 text-yellow-600 flex items-center justify-center mb-8 shadow-inner transition-transform group-hover:scale-110">
+                        <i class="fa-solid ${s.icon} text-2xl"></i>
+                    </div>
+                    <h4 class="font-black mb-4 text-slate-900 text-xl tracking-tight">${s.title}</h4>
+                    <p class="text-sm text-slate-600 font-bold leading-relaxed mb-6 flex-grow">${s.scenario}</p>
+                    <div class="hidden group-hover:block animate-fade-in pt-6 border-t border-yellow-100 w-full">
+                        <p class="text-xs text-yellow-700 font-black uppercase tracking-[0.1em] mb-2">Survival Strategy:</p>
+                        <p class="text-sm text-yellow-900 font-bold leading-tight">${s.logic}</p>
+                    </div>
+                `;
                 grid.appendChild(card);
             });
         }
@@ -469,7 +524,15 @@
         function renderResources() {
             const list = document.getElementById('resource-list');
             resources.forEach(r => {
-                list.innerHTML += `<div class="bg-white p-6 rounded-2xl border border-slate-200 flex justify-between items-center shadow-sm"><div><div class="font-bold text-slate-900">${r.name}</div><div class="text-xs text-slate-400 font-bold uppercase tracking-widest mt-1">${r.note}</div></div><div class="text-lg font-black text-indigo-600">${r.contact}</div></div>`;
+                list.innerHTML += `
+                    <div class="bg-white p-10 rounded-[2.5rem] border border-slate-100 flex justify-between items-center shadow-xl transition-all hover:scale-[1.03] text-left">
+                        <div>
+                            <div class="font-black text-slate-950 text-xl tracking-tight">${r.name}</div>
+                            <div class="text-xs text-indigo-600 font-black uppercase tracking-[0.2em] mt-3">${r.note}</div>
+                        </div>
+                        <div class="text-2xl font-black text-slate-900 bg-slate-50 px-6 py-3 rounded-2xl border border-slate-100">${r.contact}</div>
+                    </div>
+                `;
             });
         }
 
@@ -477,25 +540,25 @@
             new Chart(document.getElementById('mainRadarChart').getContext('2d'), {
                 type: 'radar',
                 data: {
-                    labels: ['Flashbacks', 'Hypervigilance', 'Emotional Regulation', 'Self-Concept', 'Relationship Trust', 'Dissociation'],
+                    labels: ['Flashbacks', 'Hypervigilance', 'Regulation', 'Self-Concept', 'Trust', 'Dissociation'],
                     datasets: [
-                        { label: 'PTSD Focus', data: [90, 85, 40, 30, 40, 50], backgroundColor: 'rgba(239, 68, 68, 0.2)', borderColor: 'rgb(239, 68, 68)', pointBackgroundColor: 'rgb(239, 68, 68)' },
-                        { label: 'CPTSD Focus', data: [50, 70, 95, 95, 90, 80], backgroundColor: 'rgba(234, 179, 8, 0.2)', borderColor: 'rgb(234, 179, 8)', pointBackgroundColor: 'rgb(234, 179, 8)' }
+                        { label: 'PTSD Profile', data: [95, 90, 50, 40, 50, 60], backgroundColor: 'rgba(239, 68, 68, 0.2)', borderColor: 'rgb(239, 68, 68)', pointBackgroundColor: 'rgb(239, 68, 68)', borderWidth: 4 },
+                        { label: 'CPTSD Profile', data: [60, 80, 95, 100, 95, 90], backgroundColor: 'rgba(234, 179, 8, 0.2)', borderColor: 'rgb(234, 179, 8)', pointBackgroundColor: 'rgb(234, 179, 8)', borderWidth: 4 }
                     ]
                 },
-                options: { maintainAspectRatio: false, scales: { r: { angleLines: { color: '#e2e8f0' }, grid: { color: '#e2e8f0' }, ticks: { display: false } } }, plugins: { legend: { labels: { font: { family: 'Inter', weight: 'bold' } } } } }
+                options: { maintainAspectRatio: false, scales: { r: { angleLines: { color: 'rgba(0,0,0,0.1)' }, grid: { color: 'rgba(0,0,0,0.1)' }, ticks: { display: false }, pointLabels: { font: { weight: 'bold', family: 'Inter', size: 11 } } } }, plugins: { legend: { position: 'bottom', labels: { font: { family: 'Inter', weight: '900', size: 12 }, padding: 30 } } } }
             });
 
             new Chart(document.getElementById('polyvagalBarChart').getContext('2d'), {
                 type: 'bar',
                 data: {
-                    labels: ['Ventral Vagal (Safety)', 'Sympathetic (Fight/Flight)', 'Dorsal Vagal (Freeze)'],
+                    labels: ['Ventral (Safe)', 'Sympathetic (Alert)', 'Dorsal (Freeze)'],
                     datasets: [
-                        { label: 'Energy Level', data: [40, 95, 10], backgroundColor: ['#4ade80', '#ef4444', '#1e293b'], borderRadius: 4 },
-                        { label: 'Safety Sense', data: [95, 10, 5], backgroundColor: ['#166534', '#991b1b', '#0f172a'], borderRadius: 4 }
+                        { label: 'Energy Potential', data: [50, 100, 20], backgroundColor: ['#4ade80', '#ef4444', '#1e293b'], borderRadius: 12 },
+                        { label: 'Sense of Safety', data: [100, 20, 5], backgroundColor: ['#166534', '#991b1b', '#0f172a'], borderRadius: 12 }
                     ]
                 },
-                options: { maintainAspectRatio: false, scales: { y: { beginAtZero: true, display: false }, x: { grid: { display: false }, border: { display: false } } }, plugins: { legend: { position: 'bottom', labels: { font: { family: 'Inter', weight: 'bold' } } } } }
+                options: { maintainAspectRatio: false, scales: { y: { beginAtZero: true, display: false }, x: { grid: { display: false }, border: { display: false }, ticks: { font: { weight: 'bold', size: 12 } } } }, plugins: { legend: { position: 'bottom', labels: { font: { family: 'Inter', weight: '900' }, padding: 25 } } } }
             });
         }
 
@@ -505,74 +568,59 @@
             if (modal.classList.contains('hidden')) {
                 display.innerHTML = fullBookText;
                 modal.classList.remove('hidden');
+                document.body.style.overflow = 'hidden';
             } else {
                 stopTTS();
                 modal.classList.add('hidden');
+                document.body.style.overflow = '';
             }
         }
 
         function downloadFullCollection() {
             const content = document.getElementById('reader-content').innerText;
-            const title = "Trauma Compass: The Complete Collection\nDedicated to Jordan Lynn Stewart\n\n";
+            const title = "TRAUMA COMPASS: THE COMPLETE COLLECTION\nDedicated to Jordan Lynn Stewart\n\n";
             const fullDoc = title + content;
             const blob = new Blob([fullDoc], { type: 'text/markdown' });
             const url = URL.createObjectURL(blob);
             const a = document.createElement('a');
             a.href = url;
-            a.download = "Trauma_Compass_Complete_Collection.md";
+            a.download = "Trauma_Compass_Series.md";
             document.body.appendChild(a);
             a.click();
             document.body.removeChild(a);
             URL.revokeObjectURL(url);
-            showToast("Collection downloaded successfully.");
+            showToast("Complete series downloaded successfully.");
         }
-
-        // --- NATIVE BROWSER TTS ENGINE ---
 
         function toggleTTS() {
             if (isReading) {
                 stopTTS();
                 return;
             }
-
             const text = document.getElementById('reader-content').innerText.trim();
             if (!text) return;
-
             isReading = true;
             document.getElementById('tts-indicator').classList.remove('hidden');
             const btn = document.getElementById('tts-btn');
-            btn.innerHTML = '<i class="fa-solid fa-stop"></i> Stop';
-            btn.classList.add('bg-red-500');
+            btn.innerHTML = '<i class="fa-solid fa-stop"></i> <span>Stop Voice</span>';
+            btn.classList.add('bg-red-600', 'hover:bg-red-700');
 
-            // Split into paragraphs for better stability
             const paragraphs = text.split(/\n+/);
-            
             const speakNext = (index) => {
                 if (!isReading || index >= paragraphs.length) {
                     stopTTS();
                     return;
                 }
-
                 const utterance = new SpeechSynthesisUtterance(paragraphs[index]);
-                
-                // Try to find a nice voice
                 const voices = synth.getVoices();
-                // Prefer Google or Microsoft "Natural" or premium voices if available
                 const preferredVoice = voices.find(v => v.name.includes('Premium') || v.name.includes('Natural') || v.name.includes('Google US English'));
                 if (preferredVoice) utterance.voice = preferredVoice;
-                
-                utterance.rate = 0.95; // Slightly slower for empathy
-                utterance.pitch = 1;
-
+                utterance.rate = 0.95; 
+                utterance.pitch = 1.05;
                 utterance.onend = () => speakNext(index + 1);
-                utterance.onerror = (e) => {
-                    console.error('Speech error:', e);
-                    stopTTS();
-                };
-
+                utterance.onerror = () => stopTTS();
                 synth.speak(utterance);
             };
-
             speakNext(0);
         }
 
@@ -581,8 +629,9 @@
             synth.cancel();
             document.getElementById('tts-indicator').classList.add('hidden');
             const btn = document.getElementById('tts-btn');
-            btn.innerHTML = '<i class="fa-solid fa-volume-high"></i> Listen';
-            btn.classList.remove('bg-red-500');
+            btn.innerHTML = '<i class="fa-solid fa-volume-high"></i> <span>Listen to Collection</span>';
+            btn.classList.remove('bg-red-600', 'hover:bg-red-700');
+            btn.classList.add('bg-indigo-600', 'hover:bg-indigo-700');
         }
 
         function showToast(msg) {
@@ -594,7 +643,6 @@
         }
 
         window.onload = init;
-        // Required for Chrome to load voices
         if (speechSynthesis.onvoiceschanged !== undefined) {
             speechSynthesis.onvoiceschanged = () => synth.getVoices();
         }
