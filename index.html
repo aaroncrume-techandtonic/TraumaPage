@@ -314,7 +314,7 @@
                     <h3 class="font-bold text-slate-800">Trauma Compass Collection</h3>
                 </div>
                 <div class="flex items-center gap-3">
-                    <div id="tts-indicator" class="hidden flex items-center gap-2 text-indigo-600 text-xs font-bold animate-pulse"><i class="fa-solid fa-waveform"></i> READING ALOUD</div>
+                    <div id="tts-indicator" class="hidden flex items-center gap-2 text-indigo-600 text-xs font-bold animate-pulse"><i class="fa-solid fa-volume-high"></i> READING ALOUD</div>
                     <button onclick="toggleTTS()" id="tts-btn" class="flex items-center gap-2 bg-indigo-50 text-indigo-600 px-4 py-2 rounded-full font-bold text-sm hover:bg-indigo-600 hover:text-white transition-all shadow-sm">
                         <i class="fa-solid fa-volume-high"></i> Listen
                     </button>
@@ -326,10 +326,6 @@
             <div class="flex-1 overflow-y-auto p-8 md:p-20 book-content" id="reader-content">
                 <!-- Complete Book contents injected here -->
             </div>
-            <div id="tts-loader" class="hidden absolute inset-0 bg-white/95 z-20 flex flex-col items-center justify-center">
-                <i class="fa-solid fa-circle-notch animate-spin text-4xl text-indigo-600 mb-4"></i>
-                <p class="font-bold text-slate-500 uppercase text-xs tracking-widest">Generating Empathic Audio...</p>
-            </div>
         </div>
     </div>
 
@@ -339,8 +335,6 @@
     </div>
 
     <script>
-        const apiKey = ""; // API key managed by environment
-
         const signs = [
             { title: "Over-explaining", icon: "fa-comments", scenario: "Spending 20 mins drafting a basic email.", logic: "Preemptively soothing others to stay safe from unpredictable moods." },
             { title: "Preemptive Self-Attack", icon: "fa-shield-halved", scenario: "Calling yourself 'stupid' before anyone else can.", logic: "Controlling the pain of criticism by inflicting it yourself first." },
@@ -422,13 +416,15 @@
         `;
 
         let isReading = false;
-        let audioContext = null;
-        let currentSource = null;
+        const synth = window.speechSynthesis;
+        let speechQueue = [];
 
         function init() {
             renderSigns();
             renderResources();
             initCharts();
+            // Pre-warm voices
+            synth.getVoices();
         }
 
         function switchView(viewId) {
@@ -518,10 +514,7 @@
         function downloadFullCollection() {
             const content = document.getElementById('reader-content').innerText;
             const title = "Trauma Compass: The Complete Collection\nDedicated to Jordan Lynn Stewart\n\n";
-            const separator = "\n\n" + "=".repeat(30) + "\n\n";
-            
             const fullDoc = title + content;
-            
             const blob = new Blob([fullDoc], { type: 'text/markdown' });
             const url = URL.createObjectURL(blob);
             const a = document.createElement('a');
@@ -531,175 +524,65 @@
             a.click();
             document.body.removeChild(a);
             URL.revokeObjectURL(url);
-            
             showToast("Collection downloaded successfully.");
         }
 
-        // --- FIXED TTS ENGINE ---
+        // --- NATIVE BROWSER TTS ENGINE ---
 
-        async function fetchWithRetry(url, options, maxRetries = 5) {
-            let delay = 1000;
-            for (let i = 0; i < maxRetries; i++) {
-                try {
-                    const response = await fetch(url, options);
-                    if (response.ok) return response;
-                    if (response.status !== 429 && response.status < 500) {
-                        const err = await response.json().catch(() => ({}));
-                        throw new Error(err.error?.message || `API Error ${response.status}`);
-                    }
-                } catch (e) {
-                    if (i === maxRetries - 1) throw e;
-                }
-                await new Promise(r => setTimeout(r, delay));
-                delay *= 2;
+        function toggleTTS() {
+            if (isReading) {
+                stopTTS();
+                return;
             }
-            throw new Error("Service connection failed");
-        }
 
-        function splitTextIntoChunks(text, limit = 1200) {
-            const chunks = [];
-            let current = "";
-            const sentences = text.match(/[^\.!\?]+[\.!\?]+/g) || [text];
-            for (const s of sentences) {
-                if ((current + s).length > limit) {
-                    if (current) chunks.push(current.trim());
-                    current = s;
-                } else {
-                    current += s;
-                }
-            }
-            if (current) chunks.push(current.trim());
-            return chunks;
-        }
-
-        async function toggleTTS() {
-            if (isReading) { stopTTS(); return; }
             const text = document.getElementById('reader-content').innerText.trim();
             if (!text) return;
 
-            const loader = document.getElementById('tts-loader');
-            const indicator = document.getElementById('tts-indicator');
-            const btn = document.getElementById('tts-btn');
-
             isReading = true;
-            indicator.classList.remove('hidden');
+            document.getElementById('tts-indicator').classList.remove('hidden');
+            const btn = document.getElementById('tts-btn');
             btn.innerHTML = '<i class="fa-solid fa-stop"></i> Stop';
             btn.classList.add('bg-red-500');
 
-            try {
-                if (!audioContext) {
-                    audioContext = new (window.AudioContext || window.webkitAudioContext)();
-                }
-                if (audioContext.state === 'suspended') await audioContext.resume();
-
-                const chunks = splitTextIntoChunks(text);
-                
-                for (const chunk of chunks) {
-                    if (!isReading) break;
-                    loader.classList.remove('hidden');
-                    await speakChunk(chunk);
-                    loader.classList.add('hidden');
-                }
-            } catch (e) {
-                console.error("TTS Logic Error:", e);
-                showToast(e.message || "Audio service unavailable.");
-                stopTTS();
-            } finally {
-                loader.classList.add('hidden');
-                if (isReading && !currentSource) stopTTS();
-            }
-        }
-
-        async function speakChunk(chunkText) {
-            const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-tts:generateContent?key=${apiKey}`;
-            const res = await fetchWithRetry(url, {
-                method: "POST", 
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({
-                    contents: [{ parts: [{ text: `Say in a calm, empathetic voice: ${chunkText}` }] }],
-                    generationConfig: { 
-                        responseModalities: ["AUDIO"], 
-                        speechConfig: { voiceConfig: { prebuiltVoiceConfig: { voiceName: "Aoede" } } } 
-                    },
-                    model: "gemini-2.5-flash-preview-tts"
-                })
-            });
+            // Split into paragraphs for better stability
+            const paragraphs = text.split(/\n+/);
             
-            const result = await res.json();
-            const pcmPart = result.candidates?.[0]?.content?.parts?.[0]?.inlineData;
-            
-            if (!pcmPart || !pcmPart.data) throw new Error("No audio data returned from API.");
-
-            const sampleRate = parseInt(pcmPart.mimeType.split('rate=')[1]) || 24000;
-            await playAudioPromise(pcmPart.data, sampleRate);
-        }
-
-        function playAudioPromise(base64, sampleRate) {
-            return new Promise((resolve, reject) => {
-                if (!isReading) return resolve();
-                
-                try {
-                    const binary = atob(base64);
-                    const bytes = new Uint8Array(binary.length);
-                    for (let i = 0; i < binary.length; i++) bytes[i] = binary.charCodeAt(i);
-                    
-                    const wav = createWav(bytes, sampleRate);
-                    
-                    audioContext.decodeAudioData(wav, buffer => {
-                        if (!isReading) return resolve();
-                        currentSource = audioContext.createBufferSource();
-                        currentSource.buffer = buffer;
-                        currentSource.connect(audioContext.destination);
-                        currentSource.onended = () => {
-                            currentSource = null;
-                            resolve();
-                        };
-                        currentSource.start(0);
-                    }, (err) => {
-                        console.error("Buffer Decode Error:", err);
-                        reject(new Error("Failed to decode audio buffer."));
-                    });
-                } catch (e) {
-                    reject(e);
+            const speakNext = (index) => {
+                if (!isReading || index >= paragraphs.length) {
+                    stopTTS();
+                    return;
                 }
-            });
+
+                const utterance = new SpeechSynthesisUtterance(paragraphs[index]);
+                
+                // Try to find a nice voice
+                const voices = synth.getVoices();
+                // Prefer Google or Microsoft "Natural" or premium voices if available
+                const preferredVoice = voices.find(v => v.name.includes('Premium') || v.name.includes('Natural') || v.name.includes('Google US English'));
+                if (preferredVoice) utterance.voice = preferredVoice;
+                
+                utterance.rate = 0.95; // Slightly slower for empathy
+                utterance.pitch = 1;
+
+                utterance.onend = () => speakNext(index + 1);
+                utterance.onerror = (e) => {
+                    console.error('Speech error:', e);
+                    stopTTS();
+                };
+
+                synth.speak(utterance);
+            };
+
+            speakNext(0);
         }
 
         function stopTTS() {
             isReading = false;
+            synth.cancel();
             document.getElementById('tts-indicator').classList.add('hidden');
-            document.getElementById('tts-loader').classList.add('hidden');
             const btn = document.getElementById('tts-btn');
             btn.innerHTML = '<i class="fa-solid fa-volume-high"></i> Listen';
             btn.classList.remove('bg-red-500');
-            
-            if (currentSource) { 
-                try { currentSource.stop(); } catch(e) {}
-                currentSource = null; 
-            }
-        }
-
-        function createWav(pcm, rate) {
-            const buf = new ArrayBuffer(44 + pcm.length);
-            const v = new DataView(buf);
-            const s = (o, str) => { for (let i = 0; i < str.length; i++) v.setUint8(o + i, str.charCodeAt(i)); };
-            
-            s(0, 'RIFF'); 
-            v.setUint32(4, 36 + pcm.length, true); 
-            s(8, 'WAVE'); 
-            s(12, 'fmt '); 
-            v.setUint32(16, 16, true);
-            v.setUint16(20, 1, true); // PCM
-            v.setUint16(22, 1, true); // Mono
-            v.setUint32(24, rate, true); 
-            v.setUint32(28, rate * 2, true); 
-            v.setUint16(32, 2, true); 
-            v.setUint16(34, 16, true); 
-            s(36, 'data'); 
-            v.setUint32(40, pcm.length, true);
-            
-            for (let i = 0; i < pcm.length; i++) v.setUint8(44 + i, pcm[i]);
-            return buf;
         }
 
         function showToast(msg) {
@@ -711,6 +594,10 @@
         }
 
         window.onload = init;
+        // Required for Chrome to load voices
+        if (speechSynthesis.onvoiceschanged !== undefined) {
+            speechSynthesis.onvoiceschanged = () => synth.getVoices();
+        }
     </script>
 </body>
 </html>
