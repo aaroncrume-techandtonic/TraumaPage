@@ -28,7 +28,58 @@
             { name: "SAMHSA Helpline", contact: "1-800-662-4357", note: "Treatment Referral, Delusions" }
         ];
 
-        const fullBookText = `<h1>The Hidden Language of Trauma</h1><p>Trauma is not just a memory; it is an invisible architecture that changes how you perceive safety, connection, and your own worth. It manifests as overlooked signs easily mistaken for character flaws.</p><h2>The 17 Overlooked Signs</h2><p>Identifying these signs is the first act of rebellion. <strong>Over-explaining</strong>, <strong>Preemptive Self-Attack</strong>, and <strong>Hypervigilance</strong> are not who you are—they are how you survived.</p><h1>The Neurochemical Hijack</h1><p>Your brain is ultra-efficient at survival. During trauma, the <strong>Amygdala</strong> (Smoke Detector) screams at the smell of burnt toast, while the <strong>Prefrontal Cortex</strong> (The Pilot) goes offline.</p><h1>Reclaiming Your Life</h1><p>Healing happens from the bottom-up. Starting with the body using <strong>TIPP skills</strong> and <strong>Grounding</strong>, we teach the system that the danger is over.</p>`;
+        const fullBookText = `
+            <h1>Book 1: The Hidden Language of Trauma</h1>
+            <p>Trauma is not just a memory; it is an invisible architecture that changes how you perceive safety, connection, and your own worth. It manifests as overlooked signs easily mistaken for character flaws.</p>
+            
+            <h2>Part I: The 17 Overlooked Signs</h2>
+            <p><strong>1. Over-explaining:</strong> You draft emails for 20 minutes to avoid "danger." This is a survival response to unpredictable moods, where you preemptively soothe others to stay safe.</p>
+            <p><strong>2. Preemptive Self-Attack:</strong> You call yourself "stupid" before anyone else can. By inflicting the pain yourself first, you feel a distorted sense of control over external criticism.</p>
+            <p><strong>3. Ignoring Needs:</strong> You forget to eat or sleep because you are focused on tasks or others. This stems from a deep belief that your needs are a burden to the world.</p>
+            <p><strong>4. Validation Blocks:</strong> Praise feels like a "mistake" or evaporates instantly. A "shame filter" in your brain rejects positive information about your self-worth.</p>
+            <p><strong>5. Apologizing for Existing:</strong> Saying "sorry" for taking up physical space or simply having a presence. This is core existential shame planted by early developmental trauma.</p>
+            <p><strong>6. Splitting:</strong> Seeing the world as all-good or all-bad. Nuance feels unsafe when your early safety was inconsistent.</p>
+            <p><strong>7. Hypervigilance:</strong> Scanning every exit and tracking every facial change in a room. Your nervous system is permanently set to Code Red for survival.</p>
+            <p><strong>8. Attachment Extremes:</strong> You either dive into a relationship within 48 hours to secure "safety," or you keep everyone at a ten-foot distance. Both are desperate attempts to manage relational risk.</p>
+            <p><strong>9. The "Busy" Shield:</strong> If you stop moving, the feelings catch up. You use work or tasks as a way to outrun intrusive memories and hollow feelings.</p>
+            <p><strong>10. Dissociation:</strong> Checking out mid-conversation or "losing time." This was a brilliant survival tool when you couldn't physically escape; your mind learned to leave instead.</p>
+            <p><strong>11. Survival Cynicism:</strong> Kindness feels like a trap. When someone is nice, your first thought is "what do they want from me?" because kindness historically masked betrayal.</p>
+            <p><strong>12. The "Crowded Room" Loneliness:</strong> Even with loved ones, you feel an invisible barrier. You feel fundamentally different, as if you lack the "manual for life" everyone else has.</p>
+            <p><strong>13. Trauma Rehearsal:</strong> You spend your commute imagining the worst-case scenarios. You believe that by "practicing" the pain, you won't be destroyed when it happens.</p>
+            <p><strong>14. The Emotional Freeze:</strong> When asked "how do you feel?", your mind goes blank. This is biological disconnection from your body's emotional signals (Interoception).</p>
+            <p><strong>15. The Disproportionate Reaction:</strong> A small mistake triggers a massive wave of rage. You are reacting to decades of stored stress that the immediate trigger just unlocked.</p>
+            <p><strong>16. The Comparison Loop:</strong> You see "wholeness" in others and "fragments" in yourself, using their highlights to confirm your belief that you are uniquely broken.</p>
+            <p><strong>17. Repetition Compulsion:</strong> You find yourself in the same hurtful relationship dynamics. Your subconscious is trying to "win" the old war by recreating the battlefield, hoping for a different outcome.</p>
+
+            <h1>Book 2: The Neurochemical Hijack</h1>
+            <p>Your brain is not your enemy; it is ultra-efficient at survival. When you experience chronic trauma, your priority shifts from thriving to staying alive. This shift physically changes your blood chemistry and neural pathways.</p>
+            
+            <h2>The Polyvagal Ladder</h2>
+            <p>Recovery requires understanding the Autonomic Nervous System (ANS):</p>
+            <ul>
+                <li><strong>Ventral Vagal (Safety):</strong> Social engagement, steady heart rate, and connection.</li>
+                <li><strong>Sympathetic (Fight/Flight):</strong> Mobilization, adrenaline spikes, and anxiety.</li>
+                <li><strong>Dorsal Vagal (Freeze):</strong> Shutdown, numbness, and dissociation.</li>
+            </ul>
+
+            <h2>The Architecture of Trauma</h2>
+            <p><strong>The Amygdala:</strong> In trauma, the brain's "Smoke Detector" is enlarged and hyper-sensitive. It screams "FIRE!" at the smell of burnt toast.</p>
+            <p><strong>The Prefrontal Cortex:</strong> The "Pilot" handles logic. During a trigger, the Amygdala cuts the wires to the Pilot, leaving you unable to think logically.</p>
+            <p><strong>The Hippocampus:</strong> The "Librarian" fails to "date stamp" memories, making 20-year-old trauma feel like it is happening right now.</p>
+            <p><strong>Chemical Soup:</strong> Chronic levels of Cortisol cause inflammation and memory loss, while Adrenaline leads to "wired but tired" exhaustion.</p>
+
+            <h1>Book 3: Reclaiming Your Life</h1>
+            <p>Healing is not the absence of trauma; it is the presence of Safety. Because the thinking brain shuts down during a trigger, healing must happen from the "bottom-up"—starting with the body.</p>
+
+            <h2>Daily Integration Tools</h2>
+            <p><strong>Paced Breathing (TIPP):</strong> Splashing ice-cold water on your face triggers the "Mammalian Dive Reflex," which instantly reboots a panicked brain.</p>
+            <p><strong>Grounding (5-4-3-2-1):</strong> Anchoring yourself in the present by engaging all five senses manually.</p>
+            <p><strong>Sacred Communication:</strong> Instead of shame-based labels, use survival language. Script: "My nervous system is feeling Sympathetic right now. I need 15 minutes of quiet to find safety. It's not about you; it's about my system."</p>
+
+            <h2>Post-Traumatic Growth</h2>
+            <p>Survivors often develop "Superpowers": high empathy, the ability to read environments, and incredible resilience. Healing is becoming the integrated, wise, and powerful version of yourself forged in the fire of survival.</p>
+            <p><em>Dedicated to Jordan Lynn Stewart.</em></p>
+        `;
 
         let isReading = false;
         let audioContext = null;
@@ -124,6 +175,26 @@
             }
         }
 
+        function downloadFullCollection() {
+            const content = document.getElementById('reader-content').innerText;
+            const title = "Trauma Compass: The Complete Collection\nDedicated to Jordan Lynn Stewart\n\n";
+            const separator = "\n\n" + "=".repeat(30) + "\n\n";
+            
+            const fullDoc = title + content;
+            
+            const blob = new Blob([fullDoc], { type: 'text/markdown' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = "Trauma_Compass_Complete_Collection.md";
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+            
+            showToast("Collection downloaded successfully.");
+        }
+
         // --- FIXED TTS ENGINE ---
 
         async function fetchWithRetry(url, options, maxRetries = 5) {
@@ -171,13 +242,11 @@
             const btn = document.getElementById('tts-btn');
 
             isReading = true;
-            loader.classList.remove('hidden');
             indicator.classList.remove('hidden');
             btn.innerHTML = '<i class="fa-solid fa-stop"></i> Stop';
             btn.classList.add('bg-red-500');
 
             try {
-                // Initialize context on first click
                 if (!audioContext) {
                     audioContext = new (window.AudioContext || window.webkitAudioContext)();
                 }
@@ -187,7 +256,6 @@
                 
                 for (const chunk of chunks) {
                     if (!isReading) break;
-                    // Provide visual feedback for generation
                     loader.classList.remove('hidden');
                     await speakChunk(chunk);
                     loader.classList.add('hidden');
@@ -220,9 +288,7 @@
             const result = await res.json();
             const pcmPart = result.candidates?.[0]?.content?.parts?.[0]?.inlineData;
             
-            if (!pcmPart || !pcmPart.data) {
-                throw new Error("No audio data returned from API.");
-            }
+            if (!pcmPart || !pcmPart.data) throw new Error("No audio data returned from API.");
 
             const sampleRate = parseInt(pcmPart.mimeType.split('rate=')[1]) || 24000;
             await playAudioPromise(pcmPart.data, sampleRate);
