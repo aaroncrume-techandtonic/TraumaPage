@@ -1,4 +1,4 @@
-<script>
+ <script>
         const apiKey = ""; // API key managed by environment
 
         const signs = [
@@ -73,8 +73,8 @@
             const grid = document.getElementById('signs-grid');
             signs.forEach(s => {
                 const card = document.createElement('div');
-                card.className = "bg-white p-6 rounded-3xl border border-slate-200 sign-card group";
-                card.innerHTML = `<div class="w-10 h-10 rounded-xl bg-yellow-50 text-yellow-600 flex items-center justify-center mb-4"><i class="fa-solid ${s.icon}"></i></div><h4 class="font-bold mb-2">${s.title}</h4><p class="text-xs text-slate-500 hidden group-hover:block transition-all"><strong>Logic:</strong> ${s.logic}</p>`;
+                card.className = "bg-white p-6 rounded-3xl border border-slate-200 sign-card group shadow-sm";
+                card.innerHTML = `<div class="w-10 h-10 rounded-xl bg-yellow-50 text-yellow-600 flex items-center justify-center mb-4 shadow-inner"><i class="fa-solid ${s.icon}"></i></div><h4 class="font-bold mb-2 text-slate-800">${s.title}</h4><p class="text-xs text-slate-500 hidden group-hover:block transition-all duration-300 leading-relaxed"><strong>Logic:</strong> ${s.logic}</p>`;
                 grid.appendChild(card);
             });
         }
@@ -82,7 +82,7 @@
         function renderResources() {
             const list = document.getElementById('resource-list');
             resources.forEach(r => {
-                list.innerHTML += `<div class="bg-white p-6 rounded-2xl border border-slate-200 flex justify-between items-center"><div><div class="font-bold text-slate-900">${r.name}</div><div class="text-xs text-slate-400 font-bold uppercase tracking-widest mt-1">${r.note}</div></div><div class="text-lg font-black text-indigo-600">${r.contact}</div></div>`;
+                list.innerHTML += `<div class="bg-white p-6 rounded-2xl border border-slate-200 flex justify-between items-center shadow-sm"><div><div class="font-bold text-slate-900">${r.name}</div><div class="text-xs text-slate-400 font-bold uppercase tracking-widest mt-1">${r.note}</div></div><div class="text-lg font-black text-indigo-600">${r.contact}</div></div>`;
             });
         }
 
@@ -92,11 +92,11 @@
                 data: {
                     labels: ['Flashbacks', 'Hypervigilance', 'Emotional Regulation', 'Self-Concept', 'Relationship Trust', 'Dissociation'],
                     datasets: [
-                        { label: 'PTSD Focus', data: [90, 85, 40, 30, 40, 50], backgroundColor: 'rgba(239, 68, 68, 0.2)', borderColor: 'rgb(239, 68, 68)' },
-                        { label: 'CPTSD Focus', data: [50, 70, 95, 95, 90, 80], backgroundColor: 'rgba(234, 179, 8, 0.2)', borderColor: 'rgb(234, 179, 8)' }
+                        { label: 'PTSD Focus', data: [90, 85, 40, 30, 40, 50], backgroundColor: 'rgba(239, 68, 68, 0.2)', borderColor: 'rgb(239, 68, 68)', pointBackgroundColor: 'rgb(239, 68, 68)' },
+                        { label: 'CPTSD Focus', data: [50, 70, 95, 95, 90, 80], backgroundColor: 'rgba(234, 179, 8, 0.2)', borderColor: 'rgb(234, 179, 8)', pointBackgroundColor: 'rgb(234, 179, 8)' }
                     ]
                 },
-                options: { maintainAspectRatio: false, scales: { r: { angleLines: { display: false }, ticks: { display: false } } } }
+                options: { maintainAspectRatio: false, scales: { r: { angleLines: { color: '#e2e8f0' }, grid: { color: '#e2e8f0' }, ticks: { display: false } } }, plugins: { legend: { labels: { font: { family: 'Inter', weight: 'bold' } } } } }
             });
 
             new Chart(document.getElementById('polyvagalBarChart').getContext('2d'), {
@@ -104,11 +104,11 @@
                 data: {
                     labels: ['Ventral Vagal (Safety)', 'Sympathetic (Fight/Flight)', 'Dorsal Vagal (Freeze)'],
                     datasets: [
-                        { label: 'Energy Level', data: [40, 95, 10], backgroundColor: ['#4ade80', '#ef4444', '#1e293b'] },
-                        { label: 'Safety Sense', data: [95, 10, 5], backgroundColor: ['#166534', '#991b1b', '#0f172a'] }
+                        { label: 'Energy Level', data: [40, 95, 10], backgroundColor: ['#4ade80', '#ef4444', '#1e293b'], borderRadius: 4 },
+                        { label: 'Safety Sense', data: [95, 10, 5], backgroundColor: ['#166534', '#991b1b', '#0f172a'], borderRadius: 4 }
                     ]
                 },
-                options: { maintainAspectRatio: false, scales: { y: { beginAtZero: true, display: false }, x: { grid: { display: false } } } }
+                options: { maintainAspectRatio: false, scales: { y: { beginAtZero: true, display: false }, x: { grid: { display: false }, border: { display: false } } }, plugins: { legend: { position: 'bottom', labels: { font: { family: 'Inter', weight: 'bold' } } } } }
             });
         }
 
@@ -124,7 +124,7 @@
             }
         }
 
-        // --- TTS Logic Fixed ---
+        // --- FIXED TTS ENGINE ---
 
         async function fetchWithRetry(url, options, maxRetries = 5) {
             let delay = 1000;
@@ -132,10 +132,9 @@
                 try {
                     const response = await fetch(url, options);
                     if (response.ok) return response;
-                    // If it's a transient server error or rate limit, retry. Otherwise, throw.
                     if (response.status !== 429 && response.status < 500) {
-                        const errBody = await response.json().catch(() => ({}));
-                        throw new Error(errBody.error?.message || `API Error ${response.status}`);
+                        const err = await response.json().catch(() => ({}));
+                        throw new Error(err.error?.message || `API Error ${response.status}`);
                     }
                 } catch (e) {
                     if (i === maxRetries - 1) throw e;
@@ -146,10 +145,9 @@
             throw new Error("Service connection failed");
         }
 
-        function splitTextIntoChunks(text, limit = 1500) {
+        function splitTextIntoChunks(text, limit = 1200) {
             const chunks = [];
             let current = "";
-            // Split by sentence to keep speech natural
             const sentences = text.match(/[^\.!\?]+[\.!\?]+/g) || [text];
             for (const s of sentences) {
                 if ((current + s).length > limit) {
@@ -179,28 +177,28 @@
             btn.classList.add('bg-red-500');
 
             try {
-                // Ensure AudioContext is active on user gesture
-                if (!audioContext) audioContext = new (window.AudioContext || window.webkitAudioContext)();
+                // Initialize context on first click
+                if (!audioContext) {
+                    audioContext = new (window.AudioContext || window.webkitAudioContext)();
+                }
                 if (audioContext.state === 'suspended') await audioContext.resume();
 
                 const chunks = splitTextIntoChunks(text);
-                loader.classList.add('hidden'); // Hide loader once chunking is done and we start requests
-
+                
                 for (const chunk of chunks) {
                     if (!isReading) break;
+                    // Provide visual feedback for generation
+                    loader.classList.remove('hidden');
                     await speakChunk(chunk);
+                    loader.classList.add('hidden');
                 }
             } catch (e) {
-                console.error("TTS Failure:", e);
-                showToast(e.message || "Audio service unavailable. Please try again.");
+                console.error("TTS Logic Error:", e);
+                showToast(e.message || "Audio service unavailable.");
                 stopTTS();
             } finally {
                 loader.classList.add('hidden');
-                if (isReading) {
-                    // Check if we finished all chunks
-                    const currentText = document.getElementById('reader-content').innerText.trim();
-                    if (!currentSource && isReading) stopTTS();
-                }
+                if (isReading && !currentSource) stopTTS();
             }
         }
 
@@ -210,7 +208,7 @@
                 method: "POST", 
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({
-                    contents: [{ parts: [{ text: `Read with empathy and clarity: ${chunkText}` }] }],
+                    contents: [{ parts: [{ text: `Say in a calm, empathetic voice: ${chunkText}` }] }],
                     generationConfig: { 
                         responseModalities: ["AUDIO"], 
                         speechConfig: { voiceConfig: { prebuiltVoiceConfig: { voiceName: "Aoede" } } } 
@@ -220,12 +218,12 @@
             });
             
             const result = await res.json();
-            // The instructions specify audio data is in candidates[0].content.parts[0].inlineData
             const pcmPart = result.candidates?.[0]?.content?.parts?.[0]?.inlineData;
             
-            if (!pcmPart || !pcmPart.data) throw new Error("Audio data not found in response");
+            if (!pcmPart || !pcmPart.data) {
+                throw new Error("No audio data returned from API.");
+            }
 
-            // Extract sample rate from mimeType (e.g., "audio/L16;rate=24000")
             const sampleRate = parseInt(pcmPart.mimeType.split('rate=')[1]) || 24000;
             await playAudioPromise(pcmPart.data, sampleRate);
         }
@@ -252,8 +250,8 @@
                         };
                         currentSource.start(0);
                     }, (err) => {
-                        console.error("Audio Decode Error:", err);
-                        reject(new Error("Failed to decode audio data"));
+                        console.error("Buffer Decode Error:", err);
+                        reject(new Error("Failed to decode audio buffer."));
                     });
                 } catch (e) {
                     reject(e);
@@ -268,6 +266,7 @@
             const btn = document.getElementById('tts-btn');
             btn.innerHTML = '<i class="fa-solid fa-volume-high"></i> Listen';
             btn.classList.remove('bg-red-500');
+            
             if (currentSource) { 
                 try { currentSource.stop(); } catch(e) {}
                 currentSource = null; 
@@ -287,9 +286,9 @@
             v.setUint16(20, 1, true); // PCM
             v.setUint16(22, 1, true); // Mono
             v.setUint32(24, rate, true); 
-            v.setUint32(28, rate * 2, true); // Byte rate
-            v.setUint16(32, 2, true); // Block align
-            v.setUint16(34, 16, true); // 16-bit
+            v.setUint32(28, rate * 2, true); 
+            v.setUint16(32, 2, true); 
+            v.setUint16(34, 16, true); 
             s(36, 'data'); 
             v.setUint32(40, pcm.length, true);
             
@@ -299,7 +298,8 @@
 
         function showToast(msg) {
             const toast = document.getElementById('toast');
-            document.getElementById('toast-msg').textContent = msg;
+            const toastMsg = document.getElementById('toast-msg');
+            toastMsg.textContent = msg;
             toast.classList.remove('hidden');
             setTimeout(() => toast.classList.add('hidden'), 5000);
         }
