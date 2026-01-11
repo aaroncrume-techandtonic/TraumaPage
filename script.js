@@ -1,14 +1,4 @@
-<script src="https://cdn.tailwindcss.com"></script>
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-  
-  
-  <script>
-        // Choose Palette: Medicine Wheel Harmony
-        // Application Structure Plan: A 4-quadrant interactive dashboard modeled after the Medicine Wheel + Dedicated Tribute Section. 
-        // User Flow: Dash -> Detail Quadrants -> Dedication -> Deep Read Modal.
-        // Visualization & Content Choices: Radar (Spectrum), Bar (Biology), Grid (Signs), Animation (Breath). 
-        // Confirmation: NO SVG graphics used. NO Mermaid JS used.
-
+ <script>
         const apiKey = ""; // API key managed by environment
 
         const signs = [
@@ -134,9 +124,43 @@
             }
         }
 
+        // --- TTS Logic Fixed ---
+
+        async function fetchWithRetry(url, options, maxRetries = 5) {
+            let delay = 1000;
+            for (let i = 0; i < maxRetries; i++) {
+                try {
+                    const response = await fetch(url, options);
+                    if (response.ok) return response;
+                    if (response.status !== 429 && response.status < 500) break;
+                } catch (e) {}
+                await new Promise(r => setTimeout(r, delay));
+                delay *= 2;
+            }
+            throw new Error("API Connection Failed");
+        }
+
+        function splitTextIntoChunks(text, limit = 1500) {
+            const chunks = [];
+            let current = "";
+            const sentences = text.match(/[^\.!\?]+[\.!\?]+/g) || [text];
+            for (const s of sentences) {
+                if ((current + s).length > limit) {
+                    chunks.push(current.trim());
+                    current = s;
+                } else {
+                    current += s;
+                }
+            }
+            if (current) chunks.push(current.trim());
+            return chunks;
+        }
+
         async function toggleTTS() {
             if (isReading) { stopTTS(); return; }
-            const text = document.getElementById('reader-content').innerText;
+            const text = document.getElementById('reader-content').innerText.trim();
+            if (!text) return;
+
             const loader = document.getElementById('tts-loader');
             const indicator = document.getElementById('tts-indicator');
             const btn = document.getElementById('tts-btn');
@@ -148,18 +172,68 @@
             btn.classList.add('bg-red-500');
 
             try {
-                const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-tts:generateContent?key=${apiKey}`, {
-                    method: "POST", headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify({
-                        contents: [{ parts: [{ text: `Read with empathy: ${text.substring(0, 3000)}` }] }],
-                        generationConfig: { responseModalities: ["AUDIO"], speechConfig: { voiceConfig: { prebuiltVoiceConfig: { voiceName: "Aoede" } } } },
-                        model: "gemini-2.5-flash-preview-tts"
-                    })
+                if (!audioContext) audioContext = new (window.AudioContext || window.webkitAudioContext)();
+                if (audioContext.state === 'suspended') await audioContext.resume();
+
+                const chunks = splitTextIntoChunks(text);
+                for (const chunk of chunks) {
+                    if (!isReading) break;
+                    await speakChunk(chunk);
+                }
+            } catch (e) {
+                showToast("Audio service unavailable. Please try again.");
+                stopTTS();
+            } finally {
+                loader.classList.add('hidden');
+            }
+        }
+
+        async function speakChunk(chunkText) {
+            const res = await fetchWithRetry(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-tts:generateContent?key=${apiKey}`, {
+                method: "POST", headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                    contents: [{ parts: [{ text: `Read with empathy: ${chunkText}` }] }],
+                    generationConfig: { 
+                        responseModalities: ["AUDIO"], 
+                        speechConfig: { voiceConfig: { prebuiltVoiceConfig: { voiceName: "Aoede" } } } 
+                    },
+                    model: "gemini-2.5-flash-preview-tts"
+                })
+            });
+            const result = await res.json();
+            const candidate = result.candidates?.[0];
+            const pcmData = candidate?.content?.parts?.find(p => p.inlineData)?.inlineData;
+            
+            if (!pcmData) throw new Error("No audio data");
+
+            const sampleRate = parseInt(pcmData.mimeType.split('rate=')[1]) || 24000;
+            await playAudioPromise(pcmData.data, sampleRate);
+        }
+
+        function playAudioPromise(base64, sampleRate) {
+            return new Promise((resolve, reject) => {
+                if (!isReading) return resolve();
+                const binary = atob(base64);
+                const bytes = new Uint8Array(binary.length);
+                for (let i = 0; i < binary.length; i++) bytes[i] = binary.charCodeAt(i);
+                
+                const wav = createWav(bytes, sampleRate);
+                
+                audioContext.decodeAudioData(wav, buffer => {
+                    if (!isReading) return resolve();
+                    currentSource = audioContext.createBufferSource();
+                    currentSource.buffer = buffer;
+                    currentSource.connect(audioContext.destination);
+                    currentSource.onended = () => {
+                        currentSource = null;
+                        resolve();
+                    };
+                    currentSource.start(0);
+                }, (err) => {
+                    console.error("Decode error:", err);
+                    reject(err);
                 });
-                const result = await res.json();
-                const pcmBase64 = result.candidates[0].content.parts[0].inlineData.data;
-                playAudio(pcmBase64);
-            } catch (e) { stopTTS(); } finally { loader.classList.add('hidden'); }
+            });
         }
 
         function stopTTS() {
@@ -169,23 +243,10 @@
             const btn = document.getElementById('tts-btn');
             btn.innerHTML = '<i class="fa-solid fa-volume-high"></i> Listen';
             btn.classList.remove('bg-red-500');
-            if (currentSource) { currentSource.stop(); currentSource = null; }
-        }
-
-        function playAudio(base64) {
-            const binary = atob(base64);
-            const bytes = new Uint8Array(binary.length);
-            for (let i = 0; i < binary.length; i++) bytes[i] = binary.charCodeAt(i);
-            const wav = createWav(bytes, 24000);
-            audioContext = new (window.AudioContext || window.webkitAudioContext)();
-            audioContext.decodeAudioData(wav, buffer => {
-                if (!isReading) return;
-                currentSource = audioContext.createBufferSource();
-                currentSource.buffer = buffer;
-                currentSource.connect(audioContext.destination);
-                currentSource.onended = () => stopTTS();
-                currentSource.start(0);
-            });
+            if (currentSource) { 
+                try { currentSource.stop(); } catch(e) {}
+                currentSource = null; 
+            }
         }
 
         function createWav(pcm, rate) {
@@ -197,6 +258,13 @@
             v.setUint16(32, 2, true); v.setUint16(34, 16, true); s(36, 'data'); v.setUint32(40, pcm.length, true);
             for (let i = 0; i < pcm.length; i++) v.setUint8(44 + i, pcm[i]);
             return buf;
+        }
+
+        function showToast(msg) {
+            const toast = document.getElementById('toast');
+            document.getElementById('toast-msg').textContent = msg;
+            toast.classList.remove('hidden');
+            setTimeout(() => toast.classList.add('hidden'), 5000);
         }
 
         window.onload = init;
